@@ -29,7 +29,7 @@ public class OpenApi30Config {
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components().addSecuritySchemes(
                         "bearerAuth", new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
-                .info(new Info().title("Base Tenant API Documentation").version("v1"));
+                .info(new Info().title("Base Template API Documentation").version("v1"));
     }
 
     private Server createServer(String url) {
