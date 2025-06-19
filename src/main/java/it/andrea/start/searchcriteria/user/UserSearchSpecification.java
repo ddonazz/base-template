@@ -10,6 +10,7 @@ import org.springframework.lang.NonNull;
 
 import it.andrea.start.models.user.User;
 import it.andrea.start.models.user.UserRole;
+import it.andrea.start.utils.HelperQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
@@ -40,10 +41,11 @@ public class UserSearchSpecification implements Specification<User> {
         }
 
         if (StringUtils.isNotBlank(criteria.getTextSearch())) {
-            String pattern = "%" + criteria.getTextSearch().toUpperCase() + "%";
+            String pattern =  HelperQuery.prepareForLikeQuery(criteria.getTextSearch());
             Predicate usernamePredicate = cb.like(cb.upper(root.get("username")), pattern);
             Predicate emailPredicate = cb.like(cb.upper(root.get("email")), pattern);
             Predicate namePredicate = cb.like(cb.upper(root.get("name")), pattern);
+            
             predicates.add(cb.or(usernamePredicate, emailPredicate, namePredicate));
         }
 

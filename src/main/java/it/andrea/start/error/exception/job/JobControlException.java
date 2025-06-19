@@ -10,8 +10,8 @@ public class JobControlException extends ApplicationException {
     @Serial
     private static final long serialVersionUID = -4106296616521977141L;
 
-    public JobControlException(String message, Object... messageArguments) {
-        super(ErrorCode.JOB_CONTROL_EXCEPTION, message + " " + messageArguments[0] + "\\" + messageArguments[1], messageArguments);
+    public JobControlException(Object arg1, Object arg2, Object... messageArguments) {
+        super(ErrorCode.JOB_CONTROL_EXCEPTION, combineArguments(arg1, arg2, messageArguments));
     }
 
 }

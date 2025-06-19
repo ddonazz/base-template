@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.SessionManagementFilter;
-import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import it.andrea.start.filters.CORSFilter;
 import it.andrea.start.security.jwt.AuthEntryPointJwt;
@@ -28,11 +27,13 @@ import it.andrea.start.security.service.UserDetailsServiceImpl;
 public class SecurityConfig {
 
     private static final String[] SWAGGER_WHITELIST = {
-            "/swagger-ui/**",
+            // @formatter:off
+            "/swagger-ui/**", 
             "/v3/api-docs/**",
             "/swagger-resources/**",
             "/swagger-ui.html",
-            "/webjars/**"
+            "/webjars/**",
+            // @formatter:on
     };
 
     private final AuthEntryPointJwt unauthorizedHandler;
@@ -47,6 +48,7 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // @formatter:off
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -55,13 +57,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/authorize/login").permitAll()
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated())
+                .addFilterBefore(corsFilter(), SessionManagementFilter.class)
                 .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(corsFilter(), SessionManagementFilter.class).build();
-    }
-
-    @Bean
-    InternalResourceViewResolver defaultViewResolver() {
-        return new InternalResourceViewResolver();
+                .build();
+        // @formatter:on
     }
 
     @Bean

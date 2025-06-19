@@ -1,7 +1,6 @@
 package it.andrea.start.service.audit;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.time.Instant;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +14,6 @@ import it.andrea.start.models.audit.AuditTrace;
 import it.andrea.start.repository.audit.AuditTraceRepository;
 import it.andrea.start.searchcriteria.audit.AuditTraceSearchCriteria;
 import it.andrea.start.searchcriteria.audit.AuditTraceSearchSpecification;
-import it.andrea.start.utils.PagedResult;
 
 @Service
 @Transactional
@@ -39,36 +37,22 @@ public class AuditTraceServiceImpl implements AuditTraceService {
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResult<AuditTraceDTO> searchAuditTrace(AuditTraceSearchCriteria criteria, Pageable pageable) {
+    public Page<AuditTraceDTO> searchAuditTrace(AuditTraceSearchCriteria criteria, Pageable pageable) {
         final Page<AuditTrace> auditPage = auditTraceRepository.findAll(new AuditTraceSearchSpecification(criteria), pageable);
-        final Page<AuditTraceDTO> dtoPage = auditPage.map(auditMapper::toDto);
-
-        final PagedResult<AuditTraceDTO> result = new PagedResult<>();
-        result.setItems(dtoPage.getContent());
-        result.setPageNumber(dtoPage.getNumber());
-        result.setPageSize(dtoPage.getSize());
-        result.setTotalElements((int) dtoPage.getTotalElements());
-
-        return result;
+        return auditPage.map(auditMapper::toDto);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuditTraceDTO getAuditTrace(Long id) {
-        Optional<AuditTrace> auditOpt = auditTraceRepository.findById(id);
-        if (auditOpt.isEmpty()) {
-            return null;
-        }
-
-        AuditTrace auditTrace = auditOpt.get();
-
+        AuditTrace auditTrace = auditTraceRepository.findById(id).orElse(null);
         return auditMapper.toDto(auditTrace);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int deleteAuditTrace(LocalDateTime dateCompare) {
-        return auditTraceRepository.deleteRows(dateCompare);
+    public int deleteAuditTrace(Instant instant) {
+        return auditTraceRepository.deleteRows(instant);
     }
 
 }

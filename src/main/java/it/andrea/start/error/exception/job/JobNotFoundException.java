@@ -10,8 +10,8 @@ public class JobNotFoundException extends ApplicationException {
     @Serial
     private static final long serialVersionUID = -3259290432738968345L;
 
-    public JobNotFoundException(Object... messageArguments) {
-        super(ErrorCode.JOB_NOT_FOUND_EXCEPTION, "Job " + messageArguments[0] + "\\" + messageArguments[1] + " not found", messageArguments);
+    public JobNotFoundException(Object arg1, Object arg2, Object... messageArguments) {
+        super(ErrorCode.JOB_NOT_FOUND_EXCEPTION, combineArguments(arg1, arg2, messageArguments));
     }
 
 }

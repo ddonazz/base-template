@@ -62,6 +62,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
                 ErrorCode.AUTHENTICATION_FAILED.getHttpStatus().value(),
                 ErrorCode.AUTHENTICATION_FAILED.getCode(),
                 authException.getMessage());
+        
         LOG.debug("AuthenticationException details:", authException);
     }
 

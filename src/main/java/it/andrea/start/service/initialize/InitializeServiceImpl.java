@@ -23,7 +23,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import it.andrea.start.constants.EntityType;
+import it.andrea.start.constants.Language;
 import it.andrea.start.constants.RoleType;
 import it.andrea.start.constants.UserStatus;
 import it.andrea.start.error.exception.user.UserRoleNotFoundException;
@@ -92,8 +92,8 @@ public class InitializeServiceImpl {
                     try {
                         User user = createUserFromElement(element);
                         if (userRepository.findByUsername(user.getUsername()).isEmpty()) {
-                            user.setCreator(EntityType.SYSTEM.getValue());
-                            user.setLastModifiedBy(EntityType.SYSTEM.getValue());
+                            user.setCreatedBy(InitializeServiceImpl.class.getName());
+                            user.setUpdatedBy(InitializeServiceImpl.class.getName());
                             userRepository.save(user);
                             LOG.info("Utente '{}' creato da XML.", user.getUsername());
                         } else {
@@ -119,7 +119,7 @@ public class InitializeServiceImpl {
 
         user.setName(getTagValueOrNull("name", element));
         user.setUserStatus(UserStatus.valueOf(getRequiredTagValue("userStatus", element)));
-        user.setLanguageDefault(getTagValueOrNull("languageDefault", element));
+        user.setLanguageDefault(getLanguage("languageDefault", element));
 
         Set<UserRole> userRoles = new HashSet<>();
         NodeList rolesList = element.getElementsByTagName("role");
@@ -234,6 +234,15 @@ public class InitializeServiceImpl {
         if (nodeList.getLength() > 0 && nodeList.item(0).getTextContent() != null) {
             String value = nodeList.item(0).getTextContent().trim();
             return value.isEmpty() ? null : value;
+        }
+        return null;
+    }
+    
+    private Language getLanguage(String tagName, Element parentElement) {
+        NodeList nodeList = parentElement.getElementsByTagName(tagName);
+        if (nodeList.getLength() > 0 && nodeList.item(0).getTextContent() != null) {
+            String value = nodeList.item(0).getTextContent().trim();
+            return value.isEmpty() ? Language.getDefault() : Language.fromTag(value).orElse(Language.getDefault());
         }
         return null;
     }

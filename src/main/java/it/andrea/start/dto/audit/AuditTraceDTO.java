@@ -2,6 +2,7 @@ package it.andrea.start.dto.audit;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Instant;
 
 import it.andrea.start.constants.AuditActivity;
 import it.andrea.start.constants.AuditTypeOperation;
@@ -16,7 +17,7 @@ public class AuditTraceDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
-    private String dateEvent;
+    private Instant dateEvent;
 
     private AuditActivity activity;
     private AuditTypeOperation auditType;

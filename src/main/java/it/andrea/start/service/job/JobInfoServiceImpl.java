@@ -33,8 +33,6 @@ import it.andrea.start.error.exception.job.JobControlException;
 import it.andrea.start.error.exception.job.JobNotFoundException;
 import it.andrea.start.error.exception.job.JobSchedulingException;
 import it.andrea.start.error.exception.mapping.MappingToDtoException;
-// import it.andrea.start.error.exception.job.JobSchedulingException; // Esempio eccezione custom
-// import it.andrea.start.error.exception.job.JobControlException; // Esempio eccezione custom
 import it.andrea.start.mappers.job.JobInfoMapper;
 import it.andrea.start.models.JobInfo;
 import it.andrea.start.repository.JobInfoRepository;
@@ -173,7 +171,7 @@ public class JobInfoServiceImpl implements JobInfoService {
             }
         } catch (SchedulerException e) {
             LOG.error("Errore durante la pausa del job {}: {}", jobKey, e.getMessage(), e);
-            throw new JobControlException("Errore pausa job", jobName, jobGroup);
+            throw new JobControlException(jobName, jobGroup);
         }
     }
 
@@ -197,7 +195,7 @@ public class JobInfoServiceImpl implements JobInfoService {
             }
         } catch (SchedulerException e) {
             LOG.error("Errore Scheduler durante la ripresa del job {}: {}", jobKey, e.getMessage(), e);
-            throw new JobControlException("Errore ripresa job", jobName, jobGroup);
+            throw new JobControlException(jobName, jobGroup);
         } catch (Exception e) {
             LOG.error("Errore generico durante la ripresa del job {}: {}", jobKey, e.getMessage(), e);
             throw new RuntimeException("Errore generico ripresa job " + jobKey, e);
@@ -223,7 +221,7 @@ public class JobInfoServiceImpl implements JobInfoService {
             }
         } catch (SchedulerException e) {
             LOG.error("Errore Scheduler durante l'avvio manuale del job {}: {}", jobKey, e.getMessage(), e);
-            throw new JobControlException("Errore avvio manuale job", jobGroup, jobName);
+            throw new JobControlException(jobGroup, jobName);
         } catch (Exception e) {
             LOG.error("Errore generico durante l'avvio manuale del job {}: {}", jobKey, e.getMessage(), e);
             throw new RuntimeException("Errore generico avvio manuale job " + jobKey, e);
@@ -238,10 +236,6 @@ public class JobInfoServiceImpl implements JobInfoService {
                 });
     }
 
-    /**
-     * Logica interna per schedulare o aggiornare un job nello scheduler Quartz. Usa la strategia delete-then-recreate per semplicità e per applicare tutte le modifiche. Questa
-     * logica presume che JobInfo contenga la configurazione desiderata *attuale*.
-     */
     private void scheduleOrUpdateJobInternal(JobInfo jobInfo) throws SchedulerException, ClassNotFoundException {
         JobKey jobKey = JobKey.jobKey(jobInfo.getJobName(), jobInfo.getJobGroup());
         LOG.debug("Preparazione schedulazione/aggiornamento per job {}", jobKey);
@@ -252,25 +246,15 @@ public class JobInfoServiceImpl implements JobInfoService {
         boolean jobExists = scheduler.checkExists(jobKey);
 
         if (jobExists) {
-            // Se il job esiste, lo rimuoviamo prima di rischedularlo.
-            // Questo assicura che vengano applicate modifiche sia al JobDetail (es. jobDataMap)
-            // sia al Trigger (es. cron expression, intervallo).
             LOG.info("Job {} esiste già nello scheduler. Verrà rimosso e ricreato per applicare la configurazione corrente.", jobKey);
-            // La rimozione del job rimuove anche tutti i trigger associati.
             boolean deleted = scheduler.deleteJob(jobKey);
             if (!deleted) {
-                // Questo non dovrebbe accadere se checkExists era true, ma logghiamo per sicurezza.
                 LOG.warn("Non è stato possibile rimuovere il job {} esistente prima di aggiornarlo.", jobKey);
-                // Potresti voler lanciare un errore qui, perché l'aggiornamento potrebbe fallire o essere incoerente.
-                // throw new JobSchedulingException("Impossibile rimuovere job esistente " + jobKey);
             }
         } else {
             LOG.info("Schedulazione nuovo job: {}", jobKey);
         }
 
-        // Schedula il job con il (nuovo) dettaglio e trigger.
-        // Quartz sovrascriverà JobDetail se storeDurably(true) è stato usato e il job esiste già,
-        // ma la strategia delete/recreate è più esplicita per l'aggiornamento del trigger.
         Date scheduledTime = scheduler.scheduleJob(jobDetail, trigger);
         LOG.info("Job {} schedulato/aggiornato nello scheduler. Prossima esecuzione (stimata): {}", jobKey, scheduledTime);
     }
@@ -290,7 +274,7 @@ public class JobInfoServiceImpl implements JobInfoService {
             }
         } catch (SchedulerException e) {
             LOG.error("Errore durante la cancellazione del job {} dallo scheduler: {}", jobKey, e.getMessage(), e);
-            throw new JobControlException("Errore cancellazione job", jobGroup, jobName);
+            throw new JobControlException(jobGroup, jobName);
         }
     }
 
@@ -325,12 +309,15 @@ public class JobInfoServiceImpl implements JobInfoService {
         }
 
         LOG.debug("Costruzione JobDetail per {} con classe {}", jobKey, jobClass.getName());
+        
+        // @formatter:off
         return JobBuilder.newJob(jobClass)
                 .withIdentity(jobKey)
                 .withDescription(jobInfo.getDescription())
                 .usingJobData(jobDataMap)
                 .storeDurably()
                 .build();
+        // @formatter:on
     }
 
     private Trigger buildTrigger(JobInfo jobInfo, JobKey jobKey) {
@@ -352,57 +339,36 @@ public class JobInfoServiceImpl implements JobInfoService {
                 throw new IllegalArgumentException("Espressione CRON non valida: " + jobInfo.getCronExpression());
             }
 
-            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(jobInfo.getCronExpression())
-                    // Politica Misfire: Cosa fare se lo scheduler "perde" un'esecuzione (es. perché era spento)
-                    // - MISFIRE_INSTRUCTION_FIRE_ONCE_NOW: Esegui immediatamente una volta e riprendi la schedulazione normale. (Comune)
-                    // - MISFIRE_INSTRUCTION_DO_NOTHING: Ignora l'esecuzione persa e aspetta la prossima schedulata.
-                    // - MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY: Esegui tutte le esecuzioni perse il prima possibile. (Rischioso)
-                    .withMisfireHandlingInstructionFireAndProceed(); // Esegui immediatamente e riprendi normalmente (simile a FIRE_ONCE_NOW)
+            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(jobInfo.getCronExpression()) //
+                    .withMisfireHandlingInstructionFireAndProceed(); 
 
             LOG.debug("Costruzione CronTrigger per {} con espressione '{}' e misfire policy '{}'",
                     jobKey, jobInfo.getCronExpression(), "FireAndProceed");
 
             triggerBuilder.withSchedule(scheduleBuilder);
-            // Per CronTrigger, startAt definisce *da quando* l'espressione è valida, non un delay.
-            // Di solito non serve se si vuole che parta alla prossima occorrenza valida.
-            // triggerBuilder.startNow(); // Non strettamente necessario per Cron
-
         } else {
-            // --- Costruzione SimpleTrigger ---
             if (jobInfo.getRepeatIntervalMillis() == null || jobInfo.getRepeatIntervalMillis() <= 0) {
                 LOG.error("L'intervallo di ripetizione è nullo o non valido ({}) per il Simple job {}", jobInfo.getRepeatIntervalMillis(), jobKey);
                 throw new IllegalArgumentException("Intervallo di ripetizione mancante o non valido per il job " + jobKey);
             }
 
-            SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule()
+            SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule() //
                     .withIntervalInMilliseconds(jobInfo.getRepeatIntervalMillis());
 
-            // Gestione Repeat Count:
-            // Quartz: repeat count è il numero di ripetizioni *dopo* la prima.
-            // REPEAT_INDEFINITELY = -1. Esegue per sempre.
-            // 0 = Esegue solo la prima volta, 0 ripetizioni aggiuntive. (Totale 1 esecuzione)
-            // N = Esegue la prima volta + N ripetizioni aggiuntive. (Totale N+1 esecuzioni)
-            Integer repeatCountConfig = jobInfo.getRepeatCount(); // Potrebbe essere null
+            Integer repeatCountConfig = jobInfo.getRepeatCount(); 
 
-            if (repeatCountConfig == null || repeatCountConfig < 0) { // Considera null come infinito
+            if (repeatCountConfig == null || repeatCountConfig < 0) { 
                 scheduleBuilder.repeatForever();
                 LOG.debug("SimpleTrigger per {} ripeterà all'infinito (intervallo {} ms).", jobKey, jobInfo.getRepeatIntervalMillis());
             } else if (repeatCountConfig == 0) {
-                // Questo è ambiguo: l'utente intende 0 esecuzioni totali (impossibile) o 1 esecuzione totale?
-                // Interpretiamo come 1 esecuzione totale (0 ripetizioni).
                 scheduleBuilder.withRepeatCount(0);
                 LOG.debug("SimpleTrigger per {} eseguirà una sola volta (repeat count config 0, Quartz repeat count 0).", jobKey);
             } else {
-                // Se jobInfo.getRepeatCount() è il *numero totale* di esecuzioni desiderate (>= 1)
                 scheduleBuilder.withRepeatCount(repeatCountConfig - 1);
-                LOG.debug("SimpleTrigger per {} eseguirà un totale di {} volte (repeat count config {}, Quartz repeat count {}).",
-                        jobKey, repeatCountConfig, repeatCountConfig, repeatCountConfig - 1);
+                LOG.debug("SimpleTrigger per {} eseguirà un totale di {} volte (repeat count config {}, Quartz repeat count {}).", jobKey,
+                        repeatCountConfig, repeatCountConfig, repeatCountConfig - 1);
             }
 
-            // Politica Misfire per SimpleTrigger:
-            // - MISFIRE_INSTRUCTION_FIRE_NOW: Esegui immediatamente. (Comune)
-            // - MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT: Esegui ora, mantieni conteggio ripetizioni.
-            // - MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT: Salta, aspetta prossima schedulata, mantieni conteggio rimanente.
             scheduleBuilder.withMisfireHandlingInstructionFireNow();
             LOG.debug("SimpleTrigger per {} userà misfire policy '{}'", jobKey, "FireNow");
 

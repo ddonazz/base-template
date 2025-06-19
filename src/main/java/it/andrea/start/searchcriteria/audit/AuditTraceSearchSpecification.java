@@ -1,7 +1,7 @@
 package it.andrea.start.searchcriteria.audit;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +12,7 @@ import org.springframework.lang.NonNull;
 import it.andrea.start.constants.AuditActivity;
 import it.andrea.start.constants.AuditTypeOperation;
 import it.andrea.start.models.audit.AuditTrace;
+import it.andrea.start.utils.HelperQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -32,15 +33,15 @@ public class AuditTraceSearchSpecification implements Specification<AuditTrace> 
     public Predicate toPredicate(@NonNull Root<AuditTrace> root, CriteriaQuery<?> query, @NonNull CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicatesAnd = new ArrayList<>();
 
-        Long id = criteria.getId();
-        String sessionId = criteria.getSessionId();
-        AuditActivity activity = criteria.getActivity();
-        Long userId = criteria.getUserId();
-        String userName = criteria.getUserName();
-        AuditTypeOperation auditType = criteria.getAuditType();
-        String textSearch = criteria.getTextSearch();
-        LocalDateTime dateFrom = criteria.getDateFrom();
-        LocalDateTime dateTo = criteria.getDateTo();
+        final Long id = criteria.getId();
+        final String sessionId = criteria.getSessionId();
+        final AuditActivity activity = criteria.getActivity();
+        final Long userId = criteria.getUserId();
+        final String userName = criteria.getUserName();
+        final AuditTypeOperation auditType = criteria.getAuditType();
+        final String textSearch = criteria.getTextSearch();
+        final Instant dateFrom = criteria.getDateFrom();
+        final Instant dateTo = criteria.getDateTo();
 
         if (id != null) {
             predicatesAnd.add(criteriaBuilder.equal(root.get("id"), id));
@@ -49,7 +50,7 @@ public class AuditTraceSearchSpecification implements Specification<AuditTrace> 
             predicatesAnd.add(criteriaBuilder.equal(root.get("sessionId"), sessionId));
         }
         if (activity != null) {
-            predicatesAnd.add(criteriaBuilder.equal(root.get("activity"), activity.toString()));
+            predicatesAnd.add(criteriaBuilder.equal(root.get("activity"), activity));
         }
         if (userId != null) {
             predicatesAnd.add(criteriaBuilder.equal(root.get("userId"), userId));
@@ -58,20 +59,20 @@ public class AuditTraceSearchSpecification implements Specification<AuditTrace> 
             predicatesAnd.add(criteriaBuilder.equal(root.get("userName"), userName));
         }
         if (auditType != null) {
-            predicatesAnd.add(criteriaBuilder.equal(root.get("auditType"), auditType.toString()));
+            predicatesAnd.add(criteriaBuilder.equal(root.get("auditType"), auditType));
         }
         if (StringUtils.isNotBlank(textSearch)) {
             List<Predicate> predicatesOr = new ArrayList<>();
 
-            String value = "%" + textSearch + "%";
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("controllerMethod")), value.toUpperCase()));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityName")), value.toUpperCase()));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityKeyValue")), value.toUpperCase()));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityOldValue")), value.toUpperCase()));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityNewValue")), value.toUpperCase()));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("httpContextRequest")), value.toUpperCase()));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("httpContextResponse")), value.toUpperCase()));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("exceptionTrace")), value.toUpperCase()));
+            String value = HelperQuery.prepareForLikeQuery(textSearch); 
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("controllerMethod")), value));
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityName")), value));
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityKeyValue")), value));
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityOldValue")), value));
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityNewValue")), value));
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("httpContextRequest")), value));
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("httpContextResponse")), value));
+            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("exceptionTrace")), value));
 
             Predicate orPredicate = criteriaBuilder.or(predicatesOr.toArray(new Predicate[0]));
             predicatesAnd.add(orPredicate);

@@ -21,6 +21,7 @@ public class CORSFilter extends CorsFilter {
 
         config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:8081"));
 
+        // @formatter:off
         config.setAllowedHeaders(List.of(
                 "Origin",
                 "Content-Type",
@@ -30,6 +31,7 @@ public class CORSFilter extends CorsFilter {
                 "Access-Control-Request-Method",
                 "Access-Control-Request-Headers",
                 "Accept-Language"));
+        // @formatter:on
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 

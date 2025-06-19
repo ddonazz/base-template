@@ -15,6 +15,7 @@ import lombok.Data;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiError {
+    
     private Instant timestamp;
     private int status;
     private String error;
@@ -36,4 +37,5 @@ public class ApiError {
         this(status, code, message, path);
         this.details = details;
     }
+    
 }

@@ -19,8 +19,10 @@ import jakarta.servlet.http.HttpServletRequest;
 @Component
 public class HelperAudit {
 
-    private static final Logger log = LoggerFactory.getLogger(HelperAudit.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HelperAudit.class);
+    
     private static final int MAX_BODY_LENGTH = 2048;
+    private static final String SECRET_FIELD = "$1********$2";
 
     private final ObjectMapper objectMapper;
 
@@ -52,12 +54,14 @@ public class HelperAudit {
             return null;
         }
         try {
-            Map<String, String> flattenedParams = parameterMap.entrySet()
-                    .stream()
+            // @formatter:off
+            Map<String, String> flattenedParams = parameterMap.entrySet() 
+                    .stream() 
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> String.join(",", entry.getValue())));
+            // @formatter:on
             return objectMapper.writeValueAsString(flattenedParams);
         } catch (JsonProcessingException e) {
-            log.error("Failed to convert parameters to JSON", e);
+            LOG.error("Failed to convert parameters to JSON", e);
             return "{\"error\":\"Failed to serialize parameters\"}";
         }
     }
@@ -71,19 +75,21 @@ public class HelperAudit {
                 try {
                     bodyContent = new String(content, request.getCharacterEncoding());
                 } catch (UnsupportedEncodingException e) {
-                    log.error("Error reading cached request body encoding", e);
+                    LOG.error("Error reading cached request body encoding", e);
                     bodyContent = "[Encoding Error]";
                 }
             }
         } else if (args != null) {
-            bodyContent = Arrays.stream(args)
-                    .filter(Objects::nonNull)
-                    .findFirst()
+            // @formatter:off
+            bodyContent = Arrays.stream(args) 
+                    .filter(Objects::nonNull) 
+                    .findFirst() 
                     .map(this::convertObjectToJsonSafe)
                     .orElse(null);
+            // @formatter:on
 
             if (bodyContent == null) {
-                log.warn("Request is not a ContentCachingRequestWrapper, consider adding the filter. Body might be missing from audit.");
+                LOG.warn("Request is not a ContentCachingRequestWrapper, consider adding the filter. Body might be missing from audit.");
             }
         }
 
@@ -103,17 +109,19 @@ public class HelperAudit {
         try {
             return objectMapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
-            log.warn("Failed to convert object to JSON for audit log: {}", e.getMessage());
+            LOG.warn("Failed to convert object to JSON for audit log: {}", e.getMessage());
             return "[Serialization Error]";
         }
     }
 
     private String sanitize(String content) {
-        if (content == null)
+        if (content == null) {
             return null;
-        content = content.replaceAll("(\"password\"\\s*:\\s*\")[^\"]*(\")", "$1********$2");
-        content = content.replaceAll("(\"pass\"\\s*:\\s*\")[^\"]*(\")", "$1********$2");
-        content = content.replaceAll("(\"secret\"\\s*:\\s*\")[^\"]*(\")", "$1********$2");
+        }
+        
+        content = content.replaceAll("(\"password\"\\s*:\\s*\")[^\"]*(\")", SECRET_FIELD);
+        content = content.replaceAll("(\"pass\"\\s*:\\s*\")[^\"]*(\")", SECRET_FIELD);
+        content = content.replaceAll("(\"secret\"\\s*:\\s*\")[^\"]*(\")", SECRET_FIELD);
         return content;
     }
 

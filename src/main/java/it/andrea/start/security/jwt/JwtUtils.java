@@ -50,6 +50,7 @@ public class JwtUtils {
         Instant now = Instant.now();
         Instant expiration = now.plus(jwtExpirationDays, ChronoUnit.DAYS);
 
+        // @formatter:off
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())
                 .claim("authorities", userPrincipal.getAuthorities().stream()
@@ -59,10 +60,12 @@ public class JwtUtils {
                 .expiration(Date.from(expiration))
                 .signWith(secretKey)
                 .compact();
+        // @formatter:on
     }
 
     public Optional<JWTokenUserDetails> validateAndParseToken(String token) {
         try {
+            // @formatter:off
             Claims claims = Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
@@ -82,6 +85,7 @@ public class JwtUtils {
                             .map(SimpleGrantedAuthority::new)
                             .toList())
                     .build());
+            // @formatter:on
 
         } catch (ExpiredJwtException ex) {
             LOG.warn("JWT expired: {}", ex.getMessage());

@@ -16,15 +16,17 @@ public abstract class AbstractMapper<T, E> implements Mapper<T, E> {
         this.entityManager = entityManager;
     }
 
-    public final List<T> toDtos(final Collection<E> elements) {
-        if (elements == null || elements.isEmpty()) {
+    public final List<T> toDtos(final Collection<E> entities) {
+        if (entities == null || entities.isEmpty()) {
             return Collections.emptyList();
         }
 
-        return elements
+        // @formatter:off
+        return entities
                 .stream()
                 .filter(Objects::nonNull)
                 .map(this::toDto).toList();
+        // @formatter:on
     }
 
     protected EntityManager getEntityManager() {

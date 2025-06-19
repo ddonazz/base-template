@@ -2,15 +2,13 @@ package it.andrea.start.searchcriteria.audit;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import it.andrea.start.constants.AuditActivity;
 import it.andrea.start.constants.AuditTypeOperation;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class AuditTraceSearchCriteria implements Serializable {
 
     @Serial
@@ -23,7 +21,7 @@ public class AuditTraceSearchCriteria implements Serializable {
     private String userName;
     private AuditTypeOperation auditType;
     private String textSearch;
-    private LocalDateTime dateFrom;
-    private LocalDateTime dateTo;
+    private Instant dateFrom;
+    private Instant dateTo;
 
 }

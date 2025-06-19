@@ -1,7 +1,5 @@
 package it.andrea.start.configuration;
 
-import java.time.LocalDateTime;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -54,7 +52,6 @@ public class AuditAspect {
         }
 
         AuditTrace auditTrace = new AuditTrace();
-        auditTrace.setDateEvent(LocalDateTime.now());
 
         auditTrace.setActivity(auditAnnotation.activity());
         auditTrace.setAuditType(auditAnnotation.type());

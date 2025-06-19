@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import it.andrea.start.error.exception.user.UserNotFoundException;
 import it.andrea.start.models.user.User;
 import it.andrea.start.repository.user.UserRepository;
 
@@ -21,9 +22,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with username: " + username));
+        User user = userRepository.findByUsername(username)//
+                .orElseThrow(() -> new UserNotFoundException(username));
 
+        // @formatter:off
         return new JWTokenUserDetails.Builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
@@ -32,5 +34,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .accountNonLocked(user.isAccountNonLocked())
                 .enabled(user.isEnabled())
                 .build();
+        // @formatter:on
     }
 }

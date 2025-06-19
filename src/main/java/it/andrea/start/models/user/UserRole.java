@@ -20,27 +20,19 @@ import lombok.Getter;
 @Getter
 @Entity
 @Table(
-    name = "user_role",
-    indexes = { @Index(
-        name = "IDX_ROLE",
-        columnList = "role"
-    ) }
-)
+        name = "user_role", 
+        indexes = { 
+                @Index(name = "IDX_ROLE", columnList = "role") 
+                }
+        )
 public class UserRole implements GrantedAuthority {
 
     @Serial
     private static final long serialVersionUID = 5841586043417823821L;
 
     @Id
-    @GeneratedValue(
-        strategy = GenerationType.SEQUENCE,
-        generator = "USER_ROLE_SEQ"
-    )
-    @SequenceGenerator(
-        name = "USER_ROLE_SEQ",
-        sequenceName = "USER_ROLE_SEQUENCE",
-        allocationSize = 1
-    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "USER_ROLE_SEQ")
+    @SequenceGenerator(name = "USER_ROLE_SEQ", sequenceName = "USER_ROLE_SEQUENCE", allocationSize = 1)
     private Long id;
 
     @Enumerated(EnumType.STRING)

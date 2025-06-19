@@ -1,6 +1,8 @@
 package it.andrea.start.job;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDataMap;
@@ -28,19 +30,20 @@ public class AuditDeleteJob extends QuartzJobBean {
     @Override
     public void executeInternal(@NonNull JobExecutionContext context) {
         JobDataMap jobDataMap = context.getMergedJobDataMap();
-        int retentionDays = jobDataMap.getIntValue("retentionDays");
+        long retentionDays = jobDataMap.getIntValue("retentionDays");
         if (retentionDays <= 0) {
             retentionDays = globalConfig.getAuditSavedDay();
         }
 
-        LOG.info("Start at : {}", LocalDateTime.now());
+        Instant now = Instant.now();
+        LOG.info("Start at : {}", LocalDateTime.from(now));
 
-        LocalDateTime dateCompare = LocalDateTime.now().minusDays(retentionDays);
-        LOG.info("Delete audits before of : {}", dateCompare);
+        Instant deleteBefore = now.minus(retentionDays, ChronoUnit.DAYS);
+        LOG.info("Delete audits before of : {}", LocalDateTime.from(now));
 
-        int rowDeleted = auditTraceService.deleteAuditTrace(dateCompare);
+        int rowDeleted = auditTraceService.deleteAuditTrace(deleteBefore);
         LOG.info("Deleted audits : {}", rowDeleted);
 
-        LOG.info("Ending at : {}", LocalDateTime.now());
+        LOG.info("Ending at : {}", LocalDateTime.from(Instant.now()));
     }
 }

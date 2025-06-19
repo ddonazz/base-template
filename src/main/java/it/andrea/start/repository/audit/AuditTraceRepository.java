@@ -1,6 +1,6 @@
 package it.andrea.start.repository.audit;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,7 +21,7 @@ public interface AuditTraceRepository extends JpaRepository<AuditTrace, Long>, J
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM AuditTrace at WHERE at.dateEvent < :date")
-    public int deleteRows(@Param("date") LocalDateTime date);
+    @Query("DELETE FROM AuditTrace at WHERE at.dateEvent < :instant")
+    public int deleteRows(@Param("instant") Instant instant);
 
 }

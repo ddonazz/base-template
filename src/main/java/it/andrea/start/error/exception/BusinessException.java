@@ -10,6 +10,10 @@ public class BusinessException extends ApplicationException {
     @Serial
     private static final long serialVersionUID = 3278937856043871034L;
 
+    public BusinessException(ErrorCode errorCode, Object... args) {
+        super(errorCode, args);
+    }
+
     public BusinessException(ErrorCode errorCode, String message, Object... args) {
         super(errorCode, message, args);
     }

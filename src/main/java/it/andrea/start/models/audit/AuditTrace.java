@@ -1,6 +1,6 @@
 package it.andrea.start.models.audit;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import it.andrea.start.constants.AuditActivity;
 import it.andrea.start.constants.AuditTypeOperation;
@@ -19,27 +19,19 @@ import lombok.Data;
 @Data
 @Entity
 @Table(
-    name = "audit_trace",
-    indexes = {
-            @Index(
-                name = "IDX_AUDIT_USER_NAME",
-                columnList = "username"
-            ),
-            @Index(
-                name = "IDX_AUDIT_ACTIVITY",
-                columnList = "activity"
-            ),
-            @Index(
-                name = "IDX_AUDIT_TYPE",
-                columnList = "auditType"
-            ),
-            @Index(
-                name = "IDX_AUDIT_DATE_EVENT",
-                columnList = "dateEvent"
-            ),
-    }
-)
+        name = "audit_trace", 
+        indexes = { 
+                @Index(name = "IDX_AUDIT_USER_NAME", columnList = "username"), 
+                @Index(name = "IDX_AUDIT_ACTIVITY", columnList = "activity"), 
+                @Index(name = "IDX_AUDIT_TYPE", columnList = "auditType"), 
+                @Index(name = "IDX_AUDIT_DATE_EVENT", columnList = "dateEvent"), 
+                }
+        )
 public class AuditTrace {
+
+    public AuditTrace() {
+        this.dateEvent = Instant.now();
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,7 +46,7 @@ public class AuditTrace {
     private AuditTypeOperation auditType;
 
     @Column(nullable = false)
-    private LocalDateTime dateEvent;
+    private Instant dateEvent;
 
     @Column()
     private String username;
@@ -100,9 +92,5 @@ public class AuditTrace {
     @Lob
     @Column(columnDefinition = "TEXT")
     private String exceptionMessage;
-
-    public AuditTrace() {
-        this.dateEvent = LocalDateTime.now();
-    }
 
 }

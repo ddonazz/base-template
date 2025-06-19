@@ -7,10 +7,10 @@ import it.andrea.start.error.exception.mapping.MappingToEntityException;
 
 public interface Mapper<T, E> {
 
-    T toDto(E paramE) throws MappingToDtoException;
+    T toDto(E entity) throws MappingToDtoException;
 
-    void toEntity(T paramT, E paramE) throws MappingToEntityException;
+    void toEntity(T dto, E entity) throws MappingToEntityException;
 
-    Collection<T> toDtos(Collection<E> paramCollection) throws MappingToDtoException;
+    Collection<T> toDtos(Collection<E> entities) throws MappingToDtoException;
 
 }

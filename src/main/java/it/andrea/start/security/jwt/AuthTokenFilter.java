@@ -31,8 +31,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) {
         ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
         String jwt = parseJwt(wrappedRequest);
         Optional<JWTokenUserDetails> jwtTokenUserDetailOpt = jwtUtils.validateAndParseToken(jwt);
@@ -46,7 +45,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        filterChain.doFilter(wrappedRequest, response);
+        try {
+            filterChain.doFilter(wrappedRequest, response);
+        } catch (IOException | ServletException e) {
+            e.printStackTrace();
+        }
     }
 
     private String parseJwt(HttpServletRequest request) {

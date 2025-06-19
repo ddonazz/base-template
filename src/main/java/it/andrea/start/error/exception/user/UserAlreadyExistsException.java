@@ -10,8 +10,8 @@ public class UserAlreadyExistsException extends ApplicationException {
     @Serial
     private static final long serialVersionUID = 70786780815501035L;
 
-    public UserAlreadyExistsException(String userId) {
-        super(ErrorCode.USER_ALREADY_EXISTS, "User " + userId + " already exists", userId);
+    public UserAlreadyExistsException(Object arg1, Object... messageArguments) {
+        super(ErrorCode.USER_ALREADY_EXISTS, combineArguments(arg1, messageArguments));
     }
 
 }

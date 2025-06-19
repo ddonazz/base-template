@@ -7,7 +7,6 @@ import it.andrea.start.error.exception.mapping.MappingToDtoException;
 import it.andrea.start.error.exception.mapping.MappingToEntityException;
 import it.andrea.start.mappers.AbstractMapper;
 import it.andrea.start.models.audit.AuditTrace;
-import it.andrea.start.utils.HelperDate;
 import jakarta.persistence.EntityManager;
 
 @Component
@@ -25,10 +24,10 @@ public class AuditMapper extends AbstractMapper<AuditTraceDTO, AuditTrace> {
         AuditTraceDTO dto = new AuditTraceDTO();
 
         dto.setId(entity.getId());
-        dto.setDateEvent(HelperDate.dateToString(entity.getDateEvent()));
         dto.setActivity(entity.getActivity());
         dto.setAuditType(entity.getAuditType());
 
+        dto.setDateEvent(entity.getDateEvent());
         dto.setUsername(entity.getUsername());
 
         dto.setClassName(entity.getClassName());

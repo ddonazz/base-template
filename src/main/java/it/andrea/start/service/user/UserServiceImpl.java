@@ -1,14 +1,10 @@
 package it.andrea.start.service.user;
 
-import java.util.Optional;
-
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import it.andrea.start.constants.EntityType;
 import it.andrea.start.constants.RoleType;
 import it.andrea.start.constants.UserStatus;
 import it.andrea.start.controller.types.ChangePassword;
@@ -24,7 +20,6 @@ import it.andrea.start.searchcriteria.user.UserSearchSpecification;
 import it.andrea.start.security.EncrypterManager;
 import it.andrea.start.security.service.JWTokenUserDetails;
 import it.andrea.start.utils.HelperAuthorization;
-import it.andrea.start.utils.PagedResult;
 import it.andrea.start.validator.user.UserValidator;
 import lombok.AllArgsConstructor;
 
@@ -42,11 +37,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDTO getUser(String username) {
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException(username);
-        }
-        User user = optionalUser.get();
+        User user = userRepository.findByUsername(username) //
+                .orElseThrow(() -> new UserNotFoundException(username));
 
         return userMapper.toDto(user);
     }
@@ -54,11 +46,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDTO getUser(Long id) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException(id);
-        }
-        User user = optionalUser.get();
+        User user = userRepository.findById(id) //
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         return userMapper.toDto(user);
     }
@@ -67,28 +56,17 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserDTO whoami(JWTokenUserDetails jWTokenUserDetails) {
         String username = jWTokenUserDetails.getUsername();
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException(username);
-        }
-        User user = optionalUser.get();
-
+        User user = userRepository.findByUsername(username) //
+                .orElseThrow(() -> new UserNotFoundException(username));
+        
         return userMapper.toDto(user);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResult<UserDTO> listUser(UserSearchCriteria criteria, Pageable pageable, JWTokenUserDetails userDetails) {
+    public Page<UserDTO> listUser(UserSearchCriteria criteria, Pageable pageable, JWTokenUserDetails userDetails) {
         final Page<User> userPage = userRepository.findAll(new UserSearchSpecification(criteria), pageable);
-        final Page<UserDTO> dtoPage = userPage.map(userMapper::toDto);
-    
-        final PagedResult<UserDTO> result = new PagedResult<>();
-        result.setItems(dtoPage.getContent());
-        result.setPageNumber(dtoPage.getNumber() + 1);
-        result.setPageSize(dtoPage.getSize());
-        result.setTotalElements((int) dtoPage.getTotalElements());
-    
-        return result;
+        return userPage.map(userMapper::toDto);
     }
 
     @Override
@@ -98,16 +76,7 @@ public class UserServiceImpl implements UserService {
 
         User user = new User();
         userMapper.toEntity(userDTO, user);
-        String passwordCrypt = encrypterManager.encode(userDTO.getPassword());
-        user.setPassword(passwordCrypt);
-
-        String creator = userDetails.getUsername();
-        if (StringUtils.isBlank(creator)) {
-            creator = EntityType.SYSTEM.getValue();
-        }
-
-        user.setCreator(creator);
-        user.setLastModifiedBy(creator);
+        user.setPassword(encrypterManager.encode(userDTO.getPassword()));
 
         userRepository.save(user);
 
@@ -117,47 +86,37 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserDTO updateUser(UserDTO userDTO, JWTokenUserDetails userDetails) {
-        boolean haveAdminRole = HelperAuthorization.hasRole(userDetails.getAuthorities(), RoleType.ROLE_ADMIN);
-
         String username = userDTO.getUsername();
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException(username);
-        }
-        User user = optionalUser.get();
+        User user = userRepository.findByUsername(username) //
+                .orElseThrow(() -> new UserNotFoundException(username));
 
         boolean isMyProfile = user.getUsername().compareTo(userDetails.getUsername()) == 0;
 
-        userValidator.validateUserUpdate(userDTO, user, haveAdminRole, isMyProfile);
+        boolean isAdmin = HelperAuthorization.hasRole(userDetails.getAuthorities(), RoleType.ROLE_ADMIN);
+        userValidator.validateUserUpdate(userDTO, user, isAdmin, isMyProfile);
 
         userMapper.toEntity(userDTO, user);
         userRepository.save(user);
 
-        userDTO = this.userMapper.toDto(user);
-        return userDTO;
+        return this.userMapper.toDto(user);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Long id, JWTokenUserDetails userDetails) {
-        boolean haveAdminRole = HelperAuthorization.hasRole(userDetails.getAuthorities(), RoleType.ROLE_ADMIN);
-        boolean haveManagerRole = HelperAuthorization.hasRole(userDetails.getAuthorities(), RoleType.ROLE_MANAGER);
+        User user = userRepository.findById(id) //
+                .orElseThrow(() -> new UserNotFoundException(id));
 
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException(id.toString());
+        boolean isAdmin = HelperAuthorization.hasRole(user.getRoles(), RoleType.ROLE_ADMIN);
+        boolean isManager = HelperAuthorization.hasRole(user.getRoles(), RoleType.ROLE_MANAGER);
+        if (isAdmin) {
+            throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_DELETE);
         }
-        User user = optionalUser.get();
-
-        if (haveAdminRole) {
-            throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_DELETE, "");
-        }
-        if (haveManagerRole) {
-            throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_DELETE, "");
+        if (isManager) {
+            throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_DELETE);
         }
 
         user.setUserStatus(UserStatus.DEACTIVATE);
-        user.setLastModifiedBy(userDetails.getUsername());
 
         userRepository.save(user);
     }
@@ -165,17 +124,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void changePasswordForAdmin(Long userId, ChangePassword changePassword, JWTokenUserDetails userDetails) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException(userId.toString());
-        }
-        User user = optionalUser.get();
+        User user = userRepository.findById(userId) //
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
-        UserValidator.checkPassword(changePassword);
-
-        String passwordCrypt = encrypterManager.encode(changePassword.getNewPassword());
-        user.setPassword(passwordCrypt);
-        user.setLastModifiedBy(userDetails.getUsername());
+        userValidator.checkPassword(changePassword);
+        user.setPassword(encrypterManager.encode(changePassword.getNewPassword()));
 
         userRepository.save(user);
     }
@@ -183,17 +136,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void changeMyPassword(ChangePassword changePassword, JWTokenUserDetails userDetails) {
-        Optional<User> optionalUser = userRepository.findByUsername(userDetails.getUsername());
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException(userDetails.getUsername());
-        }
-        User user = optionalUser.get();
+        User user = userRepository.findByUsername(userDetails.getUsername()) //
+                .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
 
-        UserValidator.checkPassword(changePassword);
+        userValidator.checkPassword(changePassword);
 
         String passwordCrypt = encrypterManager.encode(changePassword.getNewPassword());
         user.setPassword(passwordCrypt);
-        user.setLastModifiedBy(userDetails.getUsername());
 
         userRepository.save(user);
     }

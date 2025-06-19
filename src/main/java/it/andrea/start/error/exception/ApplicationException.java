@@ -10,14 +10,8 @@ public abstract class ApplicationException extends RuntimeException {
     private final ErrorCode errorCode;
     private final transient Object[] messageArguments;
 
-    protected ApplicationException(ErrorCode errorCode, String message, Throwable cause, Object... messageArguments) {
-        super(message, cause);
-        this.errorCode = errorCode;
-        this.messageArguments = messageArguments;
-    }
-
-    protected ApplicationException(ErrorCode errorCode, String message, Object... messageArguments) {
-        super(message);
+    protected ApplicationException(ErrorCode errorCode, Object... messageArguments) {
+        super(errorCode.getDefaultMessage());
         this.errorCode = errorCode;
         this.messageArguments = messageArguments;
     }
@@ -28,5 +22,20 @@ public abstract class ApplicationException extends RuntimeException {
 
     public Object[] getMessageArguments() {
         return messageArguments;
+    }
+
+    protected static Object[] combineArguments(Object arg1, Object... messageArguments) {
+        Object[] combined = new Object[2 + messageArguments.length];
+        combined[0] = arg1;
+        System.arraycopy(messageArguments, 0, combined, 1, messageArguments.length);
+        return combined;
+    }
+
+    protected static Object[] combineArguments(Object arg1, Object arg2, Object... messageArguments) {
+        Object[] combined = new Object[2 + messageArguments.length];
+        combined[0] = arg1;
+        combined[1] = arg2;
+        System.arraycopy(messageArguments, 0, combined, 2, messageArguments.length);
+        return combined;
     }
 }

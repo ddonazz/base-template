@@ -24,10 +24,10 @@ public class UserValidator {
         this.userRepository = userRepository;
     }
 
-    public static void checkPassword(ChangePassword changePassword)
+    public void checkPassword(ChangePassword changePassword)
             throws BusinessException {
         if (!changePassword.getNewPassword().equals(changePassword.getRepeatPassword())) {
-            throw new BusinessException(ErrorCode.USER_REPEAT_PASSWORD_NOT_EQUAL, "Passwords entered do not match.");
+            throw new BusinessException(ErrorCode.USER_REPEAT_PASSWORD_NOT_EQUAL);
         }
     }
 
@@ -44,12 +44,12 @@ public class UserValidator {
 
         Collection<String> roles = dto.getRoles();
         if (checkAdmin && roles.stream().anyMatch(role -> role.equals(RoleType.ROLE_ADMIN.name()))) {
-            throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_USABLE, "");
+            throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_USABLE);
         }
 
         String roleManager = roles.stream().filter(role -> role.equals(RoleType.ROLE_MANAGER.name())).findFirst().orElse(null);
         if (roleManager != null && !haveAdminRole) {
-            throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_USABLE, "");
+            throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_USABLE);
         }
     }
 
@@ -62,13 +62,13 @@ public class UserValidator {
 
         Collection<String> roles = dto.getRoles();
         if (!isMyProfile && roles.stream().anyMatch(role -> role.equals(RoleType.ROLE_ADMIN.name()))) {
-            throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_USABLE, "");
+            throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_USABLE);
         }
 
         if (!isMyProfile) {
             String roleManager = roles.stream().filter(role -> role.equals(RoleType.ROLE_MANAGER.name())).findFirst().orElse(null);
             if (roleManager != null && !haveAdminRole) {
-                throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_USABLE, "");
+                throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_USABLE);
             }
         }
     }

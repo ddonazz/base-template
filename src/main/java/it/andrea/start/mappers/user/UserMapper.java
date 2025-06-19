@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import it.andrea.start.constants.Language;
 import it.andrea.start.constants.RoleType;
 import it.andrea.start.dto.user.UserDTO;
 import it.andrea.start.error.exception.mapping.MappingToDtoException;
@@ -53,7 +54,7 @@ public class UserMapper extends AbstractMapper<UserDTO, User> {
                 throw new MappingToDtoException("Error mapping roles for user: " + entity.getId() + ". Null value encountered in roles collection.", e);
             }
         }
-        dto.setLanguageDefault(entity.getLanguageDefault());
+        dto.setLanguageDefault(entity.getLanguageDefault().getBcp47Tag());
 
         return dto;
     }
@@ -68,7 +69,7 @@ public class UserMapper extends AbstractMapper<UserDTO, User> {
         entity.setName(dto.getName());
         entity.setEmail(dto.getEmail());
         entity.setUserStatus(dto.getUserStatus());
-        entity.setLanguageDefault(dto.getLanguageDefault());
+        entity.setLanguageDefault(Language.fromTag(dto.getLanguageDefault()).orElse(Language.getDefault()));
 
         Set<String> rolesDtoNames = dto.getRoles();
         if (CollectionUtils.isEmpty(rolesDtoNames)) {

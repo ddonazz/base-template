@@ -4,24 +4,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HelperDate {
-
-    public static final String TIMESTAMP_WITH_TIMEZONE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
-    public static final String TIMESTAMP_WITHOUT_TIMEZONE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    public static final String DATE_FORMAT_LINE = "yyyy-MM-dd";
-    public static final String DATE_FORMAT_SLASH = "dd/MM/yyyy";
-    public static final String DATE_FORMAT_DAY = "dd-MM-yyyy";
+public final class HelperDate {
 
     private static final Logger LOG = LoggerFactory.getLogger(HelperDate.class);
 
@@ -29,133 +22,84 @@ public class HelperDate {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
-    public static LocalDateTime parseDate(String dateStr, String format, boolean returnNullOnException) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-        try {
-            return dateStr != null ? LocalDateTime.parse(dateStr, formatter) : null;
-        } catch (DateTimeParseException e) {
-            if (!returnNullOnException) {
-                throw new RuntimeException("Failed to parse date: " + dateStr, e);
-            }
-            return null;
-        }
+    // --- Formatting Methods ---
+
+    public static String formatDateTime(LocalDateTime dateTime, DateTimeFormatter formatter) {
+        return dateTime != null ? dateTime.format(formatter) : null;
     }
 
-    public static String formatDate(LocalDateTime date, String format) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+    public static String formatDate(LocalDate date, DateTimeFormatter formatter) {
         return date != null ? date.format(formatter) : null;
     }
 
-    public static String formatDate(LocalDate date, String format) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-        return date != null ? date.format(formatter) : null;
-    }
-
-    public static LocalDateTime parseDateOrThrow(String dateStr, String format) {
-        if (dateStr == null) {
-            throw new IllegalArgumentException("dateStr cannot be null");
-        }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-        return LocalDateTime.parse(dateStr, formatter);
-    }
-
-    public static LocalDateTime parseDateLogError(String dateStr, String format) {
-        if (dateStr == null || format == null) {
-            LOG.error("Date string or format is null");
-            return null;
-        }
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-            return LocalDateTime.parse(dateStr, formatter);
-        } catch (DateTimeParseException e) {
-            LOG.error("Parse error for date: " + dateStr + " with format " + format, e);
-            return null;
-        }
-    }
-
-    private static LocalDate parseDateString(String dateString, String format) {
-        if (StringUtils.isBlank(dateString)) {
-            return null;
-        }
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-            return LocalDate.parse(dateString, formatter);
-        } catch (DateTimeParseException e) {
-            LOG.error("Failed to parse date: " + dateString + " with format " + format, e);
-            return null;
-        }
-    }
+    // --- Conversion Methods (java.util.Date <-> java.time) ---
 
     public static Date localDateTimeToDate(LocalDateTime localDateTime) {
+        if (localDateTime == null) {
+            return null;
+        }
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static LocalDateTime dateToLocalDateTime(Date date) {
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-    }
-
-    public static LocalDate stringToDateBar(String s) {
-        if (s.contains("-")) {
-            return stringToDate(s);
+        if (date == null) {
+            return null;
         }
-        return parseDateString(s, DATE_FORMAT_SLASH);
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
-    public static LocalDate stringToDate(String s) {
-        if (s.contains("/")) {
-            return stringToDateBar(s);
-        }
-        return parseDateString(s, DATE_FORMAT_LINE);
+    public static String dateToStringISO(LocalDate date) {
+        return formatDate(date, DateTimeFormatter.ISO_LOCAL_DATE);
     }
 
-    public static String dateToString(LocalDate date) {
-        return formatDate(date, DATE_FORMAT_LINE);
+    public static String dateTimeToStringISO(LocalDateTime dateTime) {
+        return formatDateTime(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     }
 
-    public static String dateToString(LocalDate date, String format) {
-        return formatDate(date, format);
-    }
-
-    public static String dateToString(LocalDateTime date) {
-        return formatDate(date, TIMESTAMP_WITHOUT_TIMEZONE_FORMAT);
-    }
-
-    public static String dateToString(LocalDateTime date, String format) {
-        return formatDate(date, format);
-    }
+    // --- Date/Time Component Extraction ---
 
     public static Integer year() {
         return LocalDate.now().getYear();
     }
 
     public static Integer year(LocalDate date) {
-        return date.getYear();
+        return Optional.ofNullable(date).map(LocalDate::getYear).orElse(null);
     }
 
     public static Integer month(LocalDate date) {
-        return date.getMonthValue();
+        return Optional.ofNullable(date).map(LocalDate::getMonthValue).orElse(null);
     }
 
     public static Integer day(LocalDate date) {
-        return date.getDayOfMonth();
+        return Optional.ofNullable(date).map(LocalDate::getDayOfMonth).orElse(null);
     }
 
     public static int totalDayOfMonth(int year, int month) {
-        LocalDate date = LocalDate.of(year, month, 1);
-        return date.lengthOfMonth();
+        return LocalDate.of(year, month, 1).lengthOfMonth();
     }
 
     public static int totalDayOfMonth(LocalDate date) {
+        if (date == null) {
+            throw new IllegalArgumentException("Date must not be null");
+        }
         return date.lengthOfMonth();
     }
 
     public static int getDayOfWeek(LocalDate date) {
+        if (date == null) {
+            throw new IllegalArgumentException("Date must not be null");
+        }
         return date.getDayOfWeek().getValue();
     }
 
     public static int getDayOfYear(LocalDate date) {
+        if (date == null) {
+            throw new IllegalArgumentException("Date must not be null");
+        }
         return date.getDayOfYear();
     }
+
+    // --- Date/Time Calculations ---
 
     public static long getDaysBetweenTwoDates(LocalDate dateStart, LocalDate dateEnd) {
         if (dateStart == null || dateEnd == null) {
@@ -177,7 +121,7 @@ public class HelperDate {
             throw new IllegalArgumentException("Both start and end dates must be non-null");
         }
         if (dateStart.isAfter(dateEnd)) {
-            return years;
+            return years; 
         }
         for (int year = dateStart.getYear(); year <= dateEnd.getYear(); year++) {
             years.add(year);
@@ -186,10 +130,7 @@ public class HelperDate {
     }
 
     public static LocalDate addYear(LocalDate date) {
-        if (date == null) {
-            return null;
-        }
-        return date.plusYears(1);
+        return Optional.ofNullable(date).map(d -> d.plusYears(1)).orElse(null);
     }
 
     public static LocalDate addDaysToDate(LocalDate date, int days) {
@@ -199,19 +140,24 @@ public class HelperDate {
         return date.plusDays(days);
     }
 
-    public static LocalDateTime addSecondsToDate(LocalDateTime date, int seconds) {
-        if (date == null) {
-            return null;
-        }
-        return date.plusSeconds(seconds);
+    public static LocalDateTime addSecondsToDateTime(LocalDateTime date, int seconds) {
+        return Optional.ofNullable(date).map(d -> d.plusSeconds(seconds)).orElse(null);
     }
 
-    public static LocalDate succ(LocalDate start, LocalDate stop, int dayOfWeek) {
+    public static LocalDate findNextDayOfWeekInRange(LocalDate start, LocalDate stop, int dayOfWeek) {
+        if (start == null || stop == null) {
+            throw new IllegalArgumentException("Start and stop dates must not be null");
+        }
+        if (start.isAfter(stop)) {
+            return null; 
+        }
+
         if (start.get(ChronoField.DAY_OF_WEEK) == dayOfWeek) {
             return start;
         }
+
         int daysToAdd = (dayOfWeek - start.get(ChronoField.DAY_OF_WEEK) + 7) % 7;
-        if (daysToAdd == 0) {
+        if (daysToAdd == 0) { 
             daysToAdd = 7;
         }
         LocalDate nextDay = start.plusDays(daysToAdd);
@@ -231,5 +177,5 @@ public class HelperDate {
     public static LocalDate getDate(int year, int month, int day) {
         return LocalDate.of(year, month, day);
     }
-
+    
 }

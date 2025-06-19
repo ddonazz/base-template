@@ -13,9 +13,11 @@ public class HelperAuthorization {
     }
 
     public static boolean hasRole(Collection<? extends GrantedAuthority> roles, RoleType role) {
+        // @formatter:off
         return roles
                 .stream()
                 .anyMatch(userRole -> userRole.getAuthority().equals(role.name()));
+        // @formatter:on
     }
 
 }
