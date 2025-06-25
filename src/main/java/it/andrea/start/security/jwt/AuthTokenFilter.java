@@ -3,6 +3,7 @@ package it.andrea.start.security.jwt;
 import java.io.IOException;
 import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,7 +32,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
         ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
         String jwt = parseJwt(wrappedRequest);
         Optional<JWTokenUserDetails> jwtTokenUserDetailOpt = jwtUtils.validateAndParseToken(jwt);
@@ -45,15 +46,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        try {
-            filterChain.doFilter(wrappedRequest, response);
-        } catch (IOException | ServletException e) {
-            e.printStackTrace();
-        }
+        filterChain.doFilter(wrappedRequest, response);
     }
 
     private String parseJwt(HttpServletRequest request) {
-        String headerAuth = request.getHeader("Authorization");
+        String headerAuth = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (headerAuth != null && headerAuth.startsWith(BEARER_PREFIX)) {
             return headerAuth.substring(7);
         }

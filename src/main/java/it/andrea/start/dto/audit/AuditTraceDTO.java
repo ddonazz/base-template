@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class AuditTraceDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 5482586247807122140L;
 
     private Long id;
     private Instant dateEvent;

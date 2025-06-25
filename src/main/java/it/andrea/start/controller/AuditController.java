@@ -32,8 +32,8 @@ public class AuditController {
     // @formatter:off
     @Operation(
         method = "GET",
-        description = "List audits by search criteria with timezone date",
-        summary = "List audits by search criteria with timezone date"
+        description = "List audits by search criteria",
+        summary = "List audits by search criteria"
     )
     // @formatter:on
     @GetMapping("/list")

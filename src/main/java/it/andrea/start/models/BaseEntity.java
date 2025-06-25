@@ -17,7 +17,7 @@ import lombok.Data;
 @Data
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class FirstBaseEntity {
+public abstract class BaseEntity {
 
     @CreatedBy
     @Column(nullable = false, updatable = false)

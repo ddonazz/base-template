@@ -2,6 +2,8 @@ package it.andrea.start.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -15,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.SessionManagementFilter;
 
+import it.andrea.start.constants.RoleType;
 import it.andrea.start.filters.CORSFilter;
 import it.andrea.start.security.jwt.AuthEntryPointJwt;
 import it.andrea.start.security.jwt.AuthTokenFilter;
@@ -73,6 +76,19 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    @Bean
+    DefaultMethodSecurityExpressionHandler expressionHandler() {
+        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        
+        String hierarchy = String.format("%s > %s%n%s > %s%n%s > %s",
+                RoleType.ROLE_ADMIN.name(), RoleType.ROLE_MANAGER.name(),
+                RoleType.ROLE_MANAGER.name(), RoleType.ROLE_USER.name(),
+                RoleType.ROLE_USER.name(), RoleType.ROLE_GUEST.name());
+        
+        expressionHandler.setRoleHierarchy(RoleHierarchyImpl.fromHierarchy(hierarchy));
+        return expressionHandler;
+    }
+    
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

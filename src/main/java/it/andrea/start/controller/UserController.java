@@ -45,14 +45,14 @@ public class UserController {
         summary = "Aggiungi un utente da ADMIN o MANAGER"
     )
     // @formatter:on
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("")
     @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.CREATE)
-    public ResponseEntity<UserDTO> createUser(
+    public ResponseEntity<UserDTO> create(
             @RequestBody @Validated(OnCreate.class) UserDTO userDTO, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
 
-        return ResponseEntity.ok(userService.createUser(userDTO, userDetails));
+        return ResponseEntity.ok(userService.create(userDTO, userDetails));
     }
 
     // @formatter:off
@@ -62,32 +62,32 @@ public class UserController {
         summary = "Aggiorna un utente da ADMIN o MANAGER"
     )
     // @formatter:on
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/{id}")
     @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.UPDATE)
-    public ResponseEntity<UserDTO> updateUser(
+    public ResponseEntity<UserDTO> update(
             @PathVariable Long id, //
             @RequestBody UserDTO userDTO, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
 
         userDTO.setId(id);
-        return ResponseEntity.ok(userService.updateUser(userDTO, userDetails));
+        return ResponseEntity.ok(userService.update(userDTO, userDetails));
     }
 
     // @formatter:off
     @Operation(
-        description = "Elimina un utente da ADMIN o MANAGER",
-        summary = "Elimina un utente da ADMIN o MANAGER"
+        description = "Disattiva un utente da ADMIN o MANAGER",
+        summary = "Disattiva un utente da ADMIN o MANAGER"
     )
     // @formatter:on
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/{id}")
     @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.DELETE)
-    public ResponseEntity<Void> deleteUser(
+    public ResponseEntity<Void> deactivate(
             @PathVariable Long id, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
 
-        userService.deleteUser(id, userDetails);
+        userService.deactivate(id, userDetails);
 
         return ResponseEntity.ok().build();
     }
@@ -98,11 +98,11 @@ public class UserController {
         summary = "Informazioni di un utente"
     )
     // @formatter:on
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/{id}")
     @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.GET_INFO)
-    public ResponseEntity<UserDTO> infoUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUser(id));
+    public ResponseEntity<UserDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getById(id));
     }
 
     // @formatter:off
@@ -111,14 +111,14 @@ public class UserController {
         summary = "Lista degli utenti"
     )
     // @formatter:on
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'OPERATOR')")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/list")
     public ResponseEntity<Page<UserDTO>> listUser(
             UserSearchCriteria searchCriteria, //
             Pageable pageable, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
 
-        Page<UserDTO> users = userService.listUser(searchCriteria, pageable, userDetails);
+        Page<UserDTO> users = userService.list(searchCriteria, pageable, userDetails);
 
         return ResponseEntity.ok(users);
     }
@@ -131,12 +131,13 @@ public class UserController {
     // @formatter:on
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/change-password/{userId}")
+    @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.UPDATE)
     public ResponseEntity<Void> changePassword(
             @PathVariable Long userId, //
             @RequestBody ChangePassword changePassword, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
 
-        userService.changePasswordForAdmin(userId, changePassword, userDetails);
+        userService.changePassword(userId, changePassword, userDetails);
 
         return ResponseEntity.ok().build();
     }
@@ -147,9 +148,10 @@ public class UserController {
         summary = "User self change password"
     )
     // @formatter:on
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'OPERATOR')")
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/change-my-password")
-    public ResponseEntity<Void> changePassword(
+    @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.UPDATE)
+    public ResponseEntity<Void> changeMyPassword(
             @RequestBody ChangePassword changePassword, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
         

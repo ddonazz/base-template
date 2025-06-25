@@ -30,61 +30,76 @@ public class AuditTraceSearchSpecification implements Specification<AuditTrace> 
     }
 
     @Override
-    public Predicate toPredicate(@NonNull Root<AuditTrace> root, CriteriaQuery<?> query, @NonNull CriteriaBuilder criteriaBuilder) {
+    public Predicate toPredicate(@NonNull Root<AuditTrace> root, @NonNull CriteriaQuery<?> query, @NonNull CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicatesAnd = new ArrayList<>();
 
         final Long id = criteria.getId();
-        final String sessionId = criteria.getSessionId();
+        final String userName = criteria.getUsername();
         final AuditActivity activity = criteria.getActivity();
-        final Long userId = criteria.getUserId();
-        final String userName = criteria.getUserName();
         final AuditTypeOperation auditType = criteria.getAuditType();
-        final String textSearch = criteria.getTextSearch();
-        final Instant dateFrom = criteria.getDateFrom();
-        final Instant dateTo = criteria.getDateTo();
+        final Instant dateEventFrom = criteria.getDateEventFrom(); 
+        final Instant dateEventTo = criteria.getDateEventTo();     
+        final String className = criteria.getClassName();
+        final String methodName = criteria.getMethodName();
+        final String controllerMethod = criteria.getControllerMethod();
+        final String httpMethod = criteria.getHttpMethod();
+        final String requestUri = criteria.getRequestUri();
+        final String clientIpAddress = criteria.getClientIpAddress();
+        final Boolean success = criteria.getSuccess();
+        final Long durationMs = criteria.getDurationMs();
+        final String exceptionType = criteria.getExceptionType();
+        final String exceptionMessage = criteria.getExceptionMessage();
 
         if (id != null) {
             predicatesAnd.add(criteriaBuilder.equal(root.get("id"), id));
         }
-        if (StringUtils.isNotBlank(sessionId)) {
-            predicatesAnd.add(criteriaBuilder.equal(root.get("sessionId"), sessionId));
+        if (StringUtils.isNotBlank(userName)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("username")), HelperQuery.prepareForLikeQuery(userName)));
         }
         if (activity != null) {
             predicatesAnd.add(criteriaBuilder.equal(root.get("activity"), activity));
         }
-        if (userId != null) {
-            predicatesAnd.add(criteriaBuilder.equal(root.get("userId"), userId));
-        }
-        if (StringUtils.isNotBlank(userName)) {
-            predicatesAnd.add(criteriaBuilder.equal(root.get("userName"), userName));
-        }
         if (auditType != null) {
             predicatesAnd.add(criteriaBuilder.equal(root.get("auditType"), auditType));
         }
-        if (StringUtils.isNotBlank(textSearch)) {
-            List<Predicate> predicatesOr = new ArrayList<>();
 
-            String value = HelperQuery.prepareForLikeQuery(textSearch); 
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("controllerMethod")), value));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityName")), value));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityKeyValue")), value));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityOldValue")), value));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("entityNewValue")), value));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("httpContextRequest")), value));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("httpContextResponse")), value));
-            predicatesOr.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("exceptionTrace")), value));
+        if (StringUtils.isNotBlank(className)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("className")), HelperQuery.prepareForLikeQuery(className)));
+        }
+        if (StringUtils.isNotBlank(methodName)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("methodName")), HelperQuery.prepareForLikeQuery(methodName)));
+        }
+        if (StringUtils.isNotBlank(controllerMethod)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("controllerMethod")), HelperQuery.prepareForLikeQuery(controllerMethod)));
+        }
+        if (StringUtils.isNotBlank(httpMethod)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("httpMethod")), HelperQuery.prepareForLikeQuery(httpMethod)));
+        }
+        if (StringUtils.isNotBlank(requestUri)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("requestUri")), HelperQuery.prepareForLikeQuery(requestUri)));
+        }
+        if (StringUtils.isNotBlank(clientIpAddress)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("clientIpAddress")), HelperQuery.prepareForLikeQuery(clientIpAddress)));
+        }
+        if (success != null) {
+            predicatesAnd.add(criteriaBuilder.equal(root.get("success"), success));
+        }
+        if (durationMs != null) {
+            predicatesAnd.add(criteriaBuilder.equal(root.get("durationMs"), durationMs));
+        }
+        if (StringUtils.isNotBlank(exceptionType)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("exceptionType")), HelperQuery.prepareForLikeQuery(exceptionType)));
+        }
+        if (StringUtils.isNotBlank(exceptionMessage)) {
+            predicatesAnd.add(criteriaBuilder.like(criteriaBuilder.upper(root.get("exceptionMessage")), HelperQuery.prepareForLikeQuery(exceptionMessage)));
+        }
 
-            Predicate orPredicate = criteriaBuilder.or(predicatesOr.toArray(new Predicate[0]));
-            predicatesAnd.add(orPredicate);
+        if (dateEventFrom != null) {
+            predicatesAnd.add(criteriaBuilder.greaterThanOrEqualTo(root.get("dateEvent"), dateEventFrom));
         }
-        if (dateFrom != null) {
-            predicatesAnd.add(criteriaBuilder.greaterThanOrEqualTo(root.get("dateEvent"), dateFrom));
-        }
-        if (dateTo != null) {
-            predicatesAnd.add(criteriaBuilder.lessThanOrEqualTo(root.get("dateEvent"), dateTo));
+        if (dateEventTo != null) {
+            predicatesAnd.add(criteriaBuilder.lessThanOrEqualTo(root.get("dateEvent"), dateEventTo));
         }
 
         return criteriaBuilder.and(predicatesAnd.toArray(new Predicate[0]));
-    }
-
-}
+    }}

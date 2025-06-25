@@ -19,5 +19,5 @@ public class HelperAuthorization {
                 .anyMatch(userRole -> userRole.getAuthority().equals(role.name()));
         // @formatter:on
     }
-
+    
 }

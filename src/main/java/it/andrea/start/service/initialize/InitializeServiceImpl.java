@@ -27,7 +27,7 @@ import it.andrea.start.constants.Language;
 import it.andrea.start.constants.RoleType;
 import it.andrea.start.constants.UserStatus;
 import it.andrea.start.error.exception.user.UserRoleNotFoundException;
-import it.andrea.start.models.JobInfo;
+import it.andrea.start.models.job.JobInfo;
 import it.andrea.start.models.user.User;
 import it.andrea.start.models.user.UserRole;
 import it.andrea.start.repository.JobInfoRepository;

@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import it.andrea.start.models.JobInfo;
+import it.andrea.start.models.job.JobInfo;
 
 public interface JobInfoRepository extends JpaRepository<JobInfo, String>, JpaSpecificationExecutor<JobInfo> {
 

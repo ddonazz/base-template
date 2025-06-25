@@ -15,9 +15,9 @@ public class LanguageInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
-        String language = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
-        if (language == null || language.isEmpty()) {
-            LocaleContextHolder.setLocale(Language.fromTag(language).orElse(Language.getDefault()).getLocale());
+        String languageTag = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        if (languageTag != null && !languageTag.isEmpty()) {
+            LocaleContextHolder.setLocale(Language.fromTag(languageTag).orElse(Language.getDefault()).getLocale());
         } else {
             LocaleContextHolder.setLocale(Language.getDefault().getLocale());
         }

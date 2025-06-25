@@ -21,7 +21,6 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +33,7 @@ import it.andrea.start.error.exception.job.JobNotFoundException;
 import it.andrea.start.error.exception.job.JobSchedulingException;
 import it.andrea.start.error.exception.mapping.MappingToDtoException;
 import it.andrea.start.mappers.job.JobInfoMapper;
-import it.andrea.start.models.JobInfo;
+import it.andrea.start.models.job.JobInfo;
 import it.andrea.start.repository.JobInfoRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +44,6 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     private static final Logger LOG = LoggerFactory.getLogger(JobInfoServiceImpl.class);
 
-    @Lazy
     private final Scheduler scheduler;
     private final JobInfoRepository jobInfoRepository;
     private final JobInfoMapper jobInfoMapper;
@@ -329,61 +327,68 @@ public class JobInfoServiceImpl implements JobInfoService {
                 .withDescription(triggerDescription)
                 .forJob(jobKey);
 
-        if (jobInfo.isCronJob()) {
-            if (jobInfo.getCronExpression() == null || jobInfo.getCronExpression().isBlank()) {
-                LOG.error("Espressione CRON mancante per il job CRON {}", jobKey);
-                throw new IllegalArgumentException("Espressione CRON mancante per il job " + jobKey);
-            }
-            if (!CronExpression.isValidExpression(jobInfo.getCronExpression())) {
-                LOG.error("Espressione CRON non valida ('{}') per il job CRON {}", jobInfo.getCronExpression(), jobKey);
-                throw new IllegalArgumentException("Espressione CRON non valida: " + jobInfo.getCronExpression());
-            }
-
-            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(jobInfo.getCronExpression()) //
-                    .withMisfireHandlingInstructionFireAndProceed(); 
-
-            LOG.debug("Costruzione CronTrigger per {} con espressione '{}' e misfire policy '{}'",
-                    jobKey, jobInfo.getCronExpression(), "FireAndProceed");
-
-            triggerBuilder.withSchedule(scheduleBuilder);
-        } else {
-            if (jobInfo.getRepeatIntervalMillis() == null || jobInfo.getRepeatIntervalMillis() <= 0) {
-                LOG.error("L'intervallo di ripetizione è nullo o non valido ({}) per il Simple job {}", jobInfo.getRepeatIntervalMillis(), jobKey);
-                throw new IllegalArgumentException("Intervallo di ripetizione mancante o non valido per il job " + jobKey);
-            }
-
-            SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule() //
-                    .withIntervalInMilliseconds(jobInfo.getRepeatIntervalMillis());
-
-            Integer repeatCountConfig = jobInfo.getRepeatCount(); 
-
-            if (repeatCountConfig == null || repeatCountConfig < 0) { 
-                scheduleBuilder.repeatForever();
-                LOG.debug("SimpleTrigger per {} ripeterà all'infinito (intervallo {} ms).", jobKey, jobInfo.getRepeatIntervalMillis());
-            } else if (repeatCountConfig == 0) {
-                scheduleBuilder.withRepeatCount(0);
-                LOG.debug("SimpleTrigger per {} eseguirà una sola volta (repeat count config 0, Quartz repeat count 0).", jobKey);
-            } else {
-                scheduleBuilder.withRepeatCount(repeatCountConfig - 1);
-                LOG.debug("SimpleTrigger per {} eseguirà un totale di {} volte (repeat count config {}, Quartz repeat count {}).", jobKey,
-                        repeatCountConfig, repeatCountConfig, repeatCountConfig - 1);
-            }
-
-            scheduleBuilder.withMisfireHandlingInstructionFireNow();
-            LOG.debug("SimpleTrigger per {} userà misfire policy '{}'", jobKey, "FireNow");
-
-            triggerBuilder.withSchedule(scheduleBuilder);
-
-            if (jobInfo.getInitialDelayMillis() != null && jobInfo.getInitialDelayMillis() > 0) {
-                Date startTime = new Date(System.currentTimeMillis() + jobInfo.getInitialDelayMillis());
-                triggerBuilder.startAt(startTime);
-                LOG.debug("Trigger per {} avrà un ritardo iniziale, partenza schedulata alle {}", jobKey, startTime);
-            } else {
-                triggerBuilder.startNow();
-                LOG.debug("Trigger per {} partirà immediatamente (nessun ritardo iniziale).", jobKey);
-            }
-        }
+        if (jobInfo.isCronJob()) buildCronJobTrigger(triggerBuilder, jobInfo, jobKey);
+        else buildSimpleTrigger(triggerBuilder, jobInfo, jobKey);
 
         return triggerBuilder.build();
+    }
+    
+    private void buildCronJobTrigger(TriggerBuilder<Trigger> triggerBuilder, JobInfo jobInfo, JobKey jobKey) {
+        if (jobInfo.getCronExpression() == null || jobInfo.getCronExpression().isBlank()) {
+            LOG.error("Espressione CRON mancante per il job CRON {}", jobKey);
+            throw new IllegalArgumentException("Espressione CRON mancante per il job " + jobKey);
+        }
+        if (!CronExpression.isValidExpression(jobInfo.getCronExpression())) {
+            LOG.error("Espressione CRON non valida ('{}') per il job CRON {}", jobInfo.getCronExpression(), jobKey);
+            throw new IllegalArgumentException("Espressione CRON non valida: " + jobInfo.getCronExpression());
+        }
+
+        CronScheduleBuilder scheduleBuilder = CronScheduleBuilder //
+                .cronSchedule(jobInfo.getCronExpression()) //
+                .withMisfireHandlingInstructionFireAndProceed(); 
+
+        LOG.debug("Costruzione CronTrigger per {} con espressione '{}' e misfire policy '{}'",
+                jobKey, jobInfo.getCronExpression(), "FireAndProceed");
+
+        triggerBuilder.withSchedule(scheduleBuilder);
+    }
+    
+    private void buildSimpleTrigger(TriggerBuilder<Trigger> triggerBuilder, JobInfo jobInfo, JobKey jobKey) {
+        if (jobInfo.getRepeatIntervalMillis() == null || jobInfo.getRepeatIntervalMillis() <= 0) {
+            LOG.error("L'intervallo di ripetizione è nullo o non valido ({}) per il Simple job {}", jobInfo.getRepeatIntervalMillis(), jobKey);
+            throw new IllegalArgumentException("Intervallo di ripetizione mancante o non valido per il job " + jobKey);
+        }
+
+        SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder //
+                .simpleSchedule() //
+                .withIntervalInMilliseconds(jobInfo.getRepeatIntervalMillis());
+
+        Integer repeatCountConfig = jobInfo.getRepeatCount(); 
+
+        if (repeatCountConfig == null || repeatCountConfig < 0) { 
+            scheduleBuilder.repeatForever();
+            LOG.debug("SimpleTrigger per {} ripeterà all'infinito (intervallo {} ms).", jobKey, jobInfo.getRepeatIntervalMillis());
+        } else if (repeatCountConfig == 0) {
+            scheduleBuilder.withRepeatCount(0);
+            LOG.debug("SimpleTrigger per {} eseguirà una sola volta (repeat count config 0, Quartz repeat count 0).", jobKey);
+        } else {
+            scheduleBuilder.withRepeatCount(repeatCountConfig - 1);
+            LOG.debug("SimpleTrigger per {} eseguirà un totale di {} volte (repeat count config {}, Quartz repeat count {}).", jobKey,
+                    repeatCountConfig, repeatCountConfig, repeatCountConfig - 1);
+        }
+
+        scheduleBuilder.withMisfireHandlingInstructionFireNow();
+        LOG.debug("SimpleTrigger per {} userà misfire policy '{}'", jobKey, "FireNow");
+
+        triggerBuilder.withSchedule(scheduleBuilder);
+
+        if (jobInfo.getInitialDelayMillis() != null && jobInfo.getInitialDelayMillis() > 0) {
+            Date startTime = new Date(System.currentTimeMillis() + jobInfo.getInitialDelayMillis());
+            triggerBuilder.startAt(startTime);
+            LOG.debug("Trigger per {} avrà un ritardo iniziale, partenza schedulata alle {}", jobKey, startTime);
+        } else {
+            triggerBuilder.startNow();
+            LOG.debug("Trigger per {} partirà immediatamente (nessun ritardo iniziale).", jobKey);
+        }
     }
 }

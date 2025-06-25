@@ -9,11 +9,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.NonNull;
 
 import it.andrea.start.models.user.User;
-import it.andrea.start.models.user.UserRole;
 import it.andrea.start.utils.HelperQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
@@ -51,20 +49,6 @@ public class UserSearchSpecification implements Specification<User> {
 
         if (criteria.getUserStatus() != null) {
             predicates.add(cb.equal(root.get("userStatus"), criteria.getUserStatus()));
-        }
-
-        boolean hasRoleFilter = criteria.getRoles() != null && !criteria.getRoles().isEmpty();
-        boolean hasRoleNotValidFilter = criteria.getRolesNotValid() != null && !criteria.getRolesNotValid().isEmpty();
-        if (hasRoleFilter || hasRoleNotValidFilter) {
-            Join<User, UserRole> roleJoin = root.join("roles");
-            query.distinct(true);
-
-            if (hasRoleFilter) {
-                predicates.add(roleJoin.get("role").in(criteria.getRoles()));
-            }
-            if (hasRoleNotValidFilter) {
-                predicates.add(cb.not(roleJoin.get("role").in(criteria.getRolesNotValid())));
-            }
         }
 
         return cb.and(predicates.toArray(new Predicate[0]));

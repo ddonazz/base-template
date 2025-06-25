@@ -1,4 +1,4 @@
-package it.andrea.start.models;
+package it.andrea.start.models.job;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

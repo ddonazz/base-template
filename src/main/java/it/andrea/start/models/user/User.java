@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import it.andrea.start.constants.Language;
 import it.andrea.start.constants.UserStatus;
-import it.andrea.start.models.FirstBaseEntity;
+import it.andrea.start.models.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,6 +33,7 @@ import lombok.Setter;
 
 @Setter
 @Entity
+// @formatter:off
 @Table(
         name = "users", 
         indexes = { 
@@ -41,7 +42,8 @@ import lombok.Setter;
                 @Index(name = "IDX_USER_STATUS", columnList = "username, userStatus") 
                 }
         )
-public class User extends FirstBaseEntity implements UserDetails {
+// @formatter:
+public class User extends BaseEntity implements UserDetails {
 
     @Serial
     private static final long serialVersionUID = 8219540355116099903L;

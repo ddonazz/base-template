@@ -10,22 +10,22 @@ import it.andrea.start.security.service.JWTokenUserDetails;
 
 public interface UserService {
 
-    UserDTO getUser(String username);
+    UserDTO getByUsername(String username);
 
-    UserDTO getUser(Long id);
+    UserDTO getById(Long id);
 
     UserDTO whoami(JWTokenUserDetails jWTokenUserDetails);
 
-    UserDTO createUser(UserDTO userDTO, JWTokenUserDetails userDetails);
+    UserDTO create(UserDTO userDTO, JWTokenUserDetails userDetails);
 
-    UserDTO updateUser(UserDTO userDTO, JWTokenUserDetails userDetails);
+    UserDTO update(UserDTO userDTO, JWTokenUserDetails userDetails);
 
-    void deleteUser(Long id, JWTokenUserDetails userDetails);
+    void deactivate(Long id, JWTokenUserDetails userDetails);
 
-    Page<UserDTO> listUser(UserSearchCriteria criteria, Pageable pageable, JWTokenUserDetails userDetails);
+    Page<UserDTO> list(UserSearchCriteria criteria, Pageable pageable, JWTokenUserDetails userDetails);
 
     void changeMyPassword(ChangePassword changePassword, JWTokenUserDetails userDetails);
 
-    void changePasswordForAdmin(Long userId, ChangePassword changePassword, JWTokenUserDetails userDetails);
+    void changePassword(Long userId, ChangePassword changePassword, JWTokenUserDetails userDetails);
 
 }

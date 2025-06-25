@@ -1,7 +1,7 @@
 package it.andrea.start.validator.user;
 
 import java.util.Collection;
-import java.util.Optional;
+import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
@@ -24,52 +24,67 @@ public class UserValidator {
         this.userRepository = userRepository;
     }
 
-    public void checkPassword(ChangePassword changePassword)
-            throws BusinessException {
-        if (!changePassword.getNewPassword().equals(changePassword.getRepeatPassword())) {
+    public void checkPassword(ChangePassword changePassword) throws BusinessException {
+        if (!Objects.equals(changePassword.getNewPassword(), changePassword.getRepeatPassword())) {
             throw new BusinessException(ErrorCode.USER_REPEAT_PASSWORD_NOT_EQUAL);
         }
     }
 
-    public void validateUser(UserDTO dto, boolean haveAdminRole, boolean checkAdmin) {
+    public void validateUser(UserDTO dto, boolean haveAdminRole) {
         String username = dto.getUsername();
-        if (userRepository.findByUsername(username.toUpperCase()).isPresent()) {
+        userRepository.findByUsername(username.toUpperCase())
+        .ifPresent(user -> {
             throw new UserAlreadyExistsException(username);
-        }
-
+        });
+        
         String email = dto.getEmail();
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new UserAlreadyExistsException(username);
-        }
+        userRepository.findByEmail(email)
+        .ifPresent(user -> {
+            throw new UserAlreadyExistsException(email);
+        });
 
-        Collection<String> roles = dto.getRoles();
-        if (checkAdmin && roles.stream().anyMatch(role -> role.equals(RoleType.ROLE_ADMIN.name()))) {
+        Collection<RoleType> roles = dto.getRoles();
+        roles.stream()
+        .filter(role -> Objects.equals(role, RoleType.ROLE_ADMIN))
+        .findFirst()
+        .ifPresent(adminRole -> {
             throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_USABLE);
-        }
-
-        String roleManager = roles.stream().filter(role -> role.equals(RoleType.ROLE_MANAGER.name())).findFirst().orElse(null);
-        if (roleManager != null && !haveAdminRole) {
+        });
+        
+        roles.stream()
+        .filter(role -> Objects.equals(role, RoleType.ROLE_MANAGER))
+        .findFirst()
+        .filter(managerRole -> !haveAdminRole) 
+        .ifPresent(filteredManagerRole -> { 
             throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_USABLE);
-        }
+        });
     }
 
     public void validateUserUpdate(UserDTO dto, User entity, boolean haveAdminRole, boolean isMyProfile) {
         String email = dto.getEmail();
-        Optional<User> optionalUserOther = userRepository.findByEmail(email);
-        if (optionalUserOther.isPresent() && !optionalUserOther.get().getId().equals(entity.getId())) {
-            throw new UserAlreadyExistsException(email);
-        }
 
-        Collection<String> roles = dto.getRoles();
-        if (!isMyProfile && roles.stream().anyMatch(role -> role.equals(RoleType.ROLE_ADMIN.name()))) {
+        userRepository.findByEmail(email)
+        .filter(otherUser -> !otherUser.getId().equals(entity.getId()))
+        .ifPresent(conflictingUser -> {
+            throw new UserAlreadyExistsException(email);
+        });
+
+        Collection<RoleType> roles = dto.getRoles();
+        roles.stream()
+        .filter(role -> Objects.equals(role, RoleType.ROLE_ADMIN))
+        .findFirst()
+        .ifPresent(adminRole -> {
             throw new BusinessException(ErrorCode.USER_ROLE_ADMIN_NOT_USABLE);
-        }
+        });
 
         if (!isMyProfile) {
-            String roleManager = roles.stream().filter(role -> role.equals(RoleType.ROLE_MANAGER.name())).findFirst().orElse(null);
-            if (roleManager != null && !haveAdminRole) {
+            roles.stream()
+            .filter(role -> Objects.equals(role, RoleType.ROLE_MANAGER))
+            .findFirst()
+            .filter(managerRole -> !haveAdminRole) 
+            .ifPresent(filteredManagerRole -> { 
                 throw new BusinessException(ErrorCode.USER_ROLE_MANAGER_NOT_USABLE);
-            }
+            });
         }
     }
 

@@ -15,13 +15,21 @@ public class AuditTraceSearchCriteria implements Serializable {
     private static final long serialVersionUID = 369313118430341308L;
 
     private Long id;
-    private String sessionId;
     private AuditActivity activity;
-    private Long userId;
-    private String userName;
+    private String username;
     private AuditTypeOperation auditType;
-    private String textSearch;
-    private Instant dateFrom;
-    private Instant dateTo;
+
+    private Instant dateEventFrom;
+    private Instant dateEventTo;
+    private String className;
+    private String methodName;
+    private String controllerMethod;
+    private String httpMethod;
+    private String requestUri;
+    private String clientIpAddress;
+    private Boolean success;
+    private Long durationMs;
+    private String exceptionType;
+    private String exceptionMessage;
 
 }

@@ -4,6 +4,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import it.andrea.start.constants.RoleType;
 import it.andrea.start.constants.UserStatus;
 import it.andrea.start.validator.OnCreate;
 import it.andrea.start.validator.OnUpdate;
@@ -21,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = false, of = { "name", "username", "email" })
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO implements Serializable {
 
     @Serial
@@ -45,12 +49,12 @@ public class UserDTO implements Serializable {
     private UserStatus userStatus;
 
     @NotEmpty(message = "{error.user.roles.empty}", groups = { OnCreate.class, OnUpdate.class })
-    private Set<String> roles;
+    private Set<RoleType> roles;
 
-    private String languageDefault;
+    private String language;
 
     @NotBlank(message = "{error.user.password.null}", groups = OnCreate.class)
-    @Size(min = 5, max = 30, message = "{error.user.password.wrong.length}", groups = OnCreate.class)
+    @Size(min = 8, max = 30, message = "{error.user.password.wrong.length}", groups = OnCreate.class)
     private transient String password;
 
 }

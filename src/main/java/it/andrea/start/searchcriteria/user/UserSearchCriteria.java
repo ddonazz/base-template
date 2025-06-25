@@ -2,9 +2,7 @@ package it.andrea.start.searchcriteria.user;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Collection;
 
-import it.andrea.start.constants.RoleType;
 import it.andrea.start.constants.UserStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +18,5 @@ public class UserSearchCriteria implements Serializable {
     private String username;
     private String textSearch;
     private UserStatus userStatus;
-    private Collection<RoleType> roles;
-    private Collection<RoleType> rolesNotValid;
 
 }

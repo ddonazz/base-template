@@ -36,6 +36,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
         ErrorCode errorCode = ErrorCode.AUTHENTICATION_FAILED;
         HttpStatus status = errorCode.getHttpStatus();
 
+        // @formatter:off
         String errorMessage = messageSource.getMessage(
                 errorCode.getCode(),
                 null,
@@ -47,6 +48,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
                 errorCode,
                 errorMessage,
                 request.getRequestURI());
+        // @formatter:on
 
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -56,12 +58,14 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     }
 
     private void logErrorDetails(HttpServletRequest request, AuthenticationException authException) {
+        // @formatter:off
         LOG.error("Authentication Failed for request [{} {}]: Status={}, ErrorCode={}, Message='{}'",
                 request.getMethod(),
                 request.getRequestURI(),
                 ErrorCode.AUTHENTICATION_FAILED.getHttpStatus().value(),
                 ErrorCode.AUTHENTICATION_FAILED.getCode(),
                 authException.getMessage());
+        // @formatter:on
         
         LOG.debug("AuthenticationException details:", authException);
     }
