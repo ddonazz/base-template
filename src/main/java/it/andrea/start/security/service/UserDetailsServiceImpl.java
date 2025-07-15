@@ -1,12 +1,12 @@
 package it.andrea.start.security.service;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import it.andrea.start.error.exception.user.UserNotFoundException;
 import it.andrea.start.models.user.User;
 import it.andrea.start.repository.user.UserRepository;
 
@@ -23,7 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)//
-                .orElseThrow(() -> new UserNotFoundException(username));
+                .orElseThrow(() -> new BadCredentialsException(username));
 
         // @formatter:off
         return new JWTokenUserDetails.Builder()

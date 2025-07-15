@@ -15,7 +15,7 @@ public class SpringSecurityAuditorAware implements AuditorAware<String> {
     public Optional<String> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
         }
 
@@ -23,7 +23,7 @@ public class SpringSecurityAuditorAware implements AuditorAware<String> {
 
         if (principal instanceof UserDetails userDetails) {
             return Optional.of(userDetails.getUsername());
-        } else if (principal instanceof String principalString && !"anonymousUser".equals(principalString)) {
+        } else if (principal instanceof String principalString) {
             return Optional.of(principalString);
         }
 

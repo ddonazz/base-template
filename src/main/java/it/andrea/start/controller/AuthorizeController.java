@@ -27,7 +27,7 @@ import it.andrea.start.service.user.UserService;
 
 @Tag(name = "Authorize API")
 @RestController
-@RequestMapping("/api/authorize")
+@RequestMapping("/api/auth")
 public class AuthorizeController {
 
     private final UserService userService;
@@ -49,7 +49,7 @@ public class AuthorizeController {
     )
     // @formatter:on
     @Audit(activity = AuditActivity.USER_OPERATION,type = AuditTypeOperation.LOGIN)
-    @PostMapping("/login")
+    @PostMapping("login")
     public ResponseEntity<TokenResponse> authorize(@RequestBody @Validated LoginRequest userAndPassword) {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userAndPassword.getUsername(), userAndPassword.getPassword());
         authentication = authenticationManager.authenticate(authentication);

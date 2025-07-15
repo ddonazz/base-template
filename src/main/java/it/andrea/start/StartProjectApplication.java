@@ -25,11 +25,6 @@ public class StartProjectApplication extends SpringBootServletInitializer {
         LOG.info("StartApplication->configure");
         LOG.info("-----------------------------");
 
-        final SpringApplicationBuilder applicationBuilder = application.sources(StartProjectApplication.class);
-        ClassLoader loader = applicationBuilder.application().getClassLoader();
-
-        LOG.info("loader : {}", loader.getName());
-
         return application.sources(StartProjectApplication.class);
     }
 

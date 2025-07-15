@@ -2,6 +2,7 @@ package it.andrea.start.job;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import org.quartz.DisallowConcurrentExecution;
@@ -36,14 +37,14 @@ public class AuditDeleteJob extends QuartzJobBean {
         }
 
         Instant now = Instant.now();
-        LOG.info("Start at : {}", LocalDateTime.from(now));
+        LOG.info("Start at : {}", LocalDateTime.ofInstant(now, ZoneId.systemDefault()));
 
         Instant deleteBefore = now.minus(retentionDays, ChronoUnit.DAYS);
-        LOG.info("Delete audits before of : {}", LocalDateTime.from(now));
+        LOG.info("Delete audits before of : {}", LocalDateTime.ofInstant(deleteBefore, ZoneId.systemDefault()));
 
         int rowDeleted = auditTraceService.deleteAuditTrace(deleteBefore);
         LOG.info("Deleted audits : {}", rowDeleted);
 
-        LOG.info("Ending at : {}", LocalDateTime.from(Instant.now()));
+        LOG.info("Ending at : {}", LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
     }
 }

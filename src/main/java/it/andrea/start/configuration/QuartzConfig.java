@@ -17,10 +17,12 @@ public class QuartzConfig {
 
     @Bean
     SchedulerFactoryBeanCustomizer schedulerFactoryBeanCustomizer(DataSource dataSource, PlatformTransactionManager transactionManager) {
+        // @formatter:off
         return schedulerFactoryBean -> {
             schedulerFactoryBean.setDataSource(dataSource);
             schedulerFactoryBean.setTransactionManager(transactionManager);
         };
+        // @formatter:on
     }
 
     @Bean
