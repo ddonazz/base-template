@@ -4,12 +4,12 @@ import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import it.andrea.start.constants.RoleType;
 import it.andrea.start.constants.UserStatus;
-import it.andrea.start.controller.types.ChangePassword;
 import it.andrea.start.dto.user.UserDTO;
 import it.andrea.start.error.exception.BusinessException;
 import it.andrea.start.error.exception.ErrorCode;
@@ -19,7 +19,6 @@ import it.andrea.start.models.user.User;
 import it.andrea.start.repository.user.UserRepository;
 import it.andrea.start.searchcriteria.user.UserSearchCriteria;
 import it.andrea.start.searchcriteria.user.UserSearchSpecification;
-import it.andrea.start.security.EncrypterManager;
 import it.andrea.start.security.service.JWTokenUserDetails;
 import it.andrea.start.utils.HelperAuthorization;
 import it.andrea.start.validator.user.UserValidator;
@@ -30,7 +29,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final EncrypterManager encrypterManager;
+    private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -78,7 +77,7 @@ public class UserServiceImpl implements UserService {
 
         User user = new User();
         userMapper.toEntity(userDTO, user);
-        user.setPassword(encrypterManager.encode(userDTO.getPassword()));
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         userRepository.save(user);
 
@@ -125,25 +124,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void changePassword(Long userId, ChangePassword changePassword, JWTokenUserDetails userDetails) {
+    public void changePassword(Long userId, String newPassword, String repeatPassword, JWTokenUserDetails userDetails) {
         User user = userRepository.findById(userId) //
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        userValidator.checkPassword(changePassword);
-        user.setPassword(encrypterManager.encode(changePassword.getNewPassword()));
+        userValidator.checkPassword(newPassword, repeatPassword);
+        user.setPassword(passwordEncoder.encode(newPassword));
 
         userRepository.save(user);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void changeMyPassword(ChangePassword changePassword, JWTokenUserDetails userDetails) {
+    public void changeMyPassword(String newPassword, String repeatPassword, JWTokenUserDetails userDetails) {
         User user = userRepository.findByUsername(userDetails.getUsername()) //
                 .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
 
-        userValidator.checkPassword(changePassword);
+        userValidator.checkPassword(newPassword, repeatPassword);
 
-        String passwordCrypt = encrypterManager.encode(changePassword.getNewPassword());
+        String passwordCrypt = passwordEncoder.encode(newPassword);
         user.setPassword(passwordCrypt);
 
         userRepository.save(user);

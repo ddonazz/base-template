@@ -68,7 +68,7 @@ public class JobController {
     // @formatter:off
     @Operation(
         summary = "Disattiva e de-schedula un job",
-        description = "Rimuove il job dallo scheduler Quartz e lo marca come inattivo (isActive=false) nel database."
+        description = "Rimuove il job dallo scheduler Quartz e lo marca come inattivo."
     )
     // @formatter:on
     @PutMapping("/unschedule/{group}/{name}")

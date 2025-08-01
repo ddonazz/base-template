@@ -18,8 +18,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.andrea.start.annotation.Audit;
 import it.andrea.start.constants.AuditActivity;
 import it.andrea.start.constants.AuditTypeOperation;
-import it.andrea.start.controller.response.TokenResponse;
-import it.andrea.start.controller.types.LoginRequest;
 import it.andrea.start.dto.user.UserDTO;
 import it.andrea.start.security.jwt.JwtUtils;
 import it.andrea.start.security.service.JWTokenUserDetails;
@@ -51,7 +49,7 @@ public class AuthorizeController {
     @Audit(activity = AuditActivity.USER_OPERATION,type = AuditTypeOperation.LOGIN)
     @PostMapping("login")
     public ResponseEntity<TokenResponse> authorize(@RequestBody @Validated LoginRequest userAndPassword) {
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userAndPassword.getUsername(), userAndPassword.getPassword());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userAndPassword.username(), userAndPassword.password());
         authentication = authenticationManager.authenticate(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -73,3 +71,6 @@ public class AuthorizeController {
     }
 
 }
+
+record LoginRequest(String username, String password) {}
+record TokenResponse(String token) {}

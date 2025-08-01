@@ -3,7 +3,6 @@ package it.andrea.start.service.user;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import it.andrea.start.controller.types.ChangePassword;
 import it.andrea.start.dto.user.UserDTO;
 import it.andrea.start.searchcriteria.user.UserSearchCriteria;
 import it.andrea.start.security.service.JWTokenUserDetails;
@@ -24,8 +23,8 @@ public interface UserService {
 
     Page<UserDTO> list(UserSearchCriteria criteria, Pageable pageable, JWTokenUserDetails userDetails);
 
-    void changeMyPassword(ChangePassword changePassword, JWTokenUserDetails userDetails);
+    void changeMyPassword(String newPassword, String repeatPassword, JWTokenUserDetails userDetails);
 
-    void changePassword(Long userId, ChangePassword changePassword, JWTokenUserDetails userDetails);
+    void changePassword(Long userId, String newPassword, String repeatPassword, JWTokenUserDetails userDetails);
 
 }

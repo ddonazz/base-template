@@ -45,8 +45,7 @@ public class AuditTraceServiceImpl implements AuditTraceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AuditTraceDTO getAuditTrace(Long id) {
-        AuditTrace auditTrace = auditTraceRepository.findById(id).orElse(null);
-        return auditMapper.toDto(auditTrace);
+        return auditMapper.toDto(auditTraceRepository.findById(id).orElse(null));
     }
 
     @Override

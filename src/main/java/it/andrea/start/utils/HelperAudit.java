@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
@@ -46,7 +47,7 @@ public class HelperAudit {
     public String getUserAgent(HttpServletRequest request) {
         if (request == null)
             return null;
-        return request.getHeader("User-Agent");
+        return request.getHeader(HttpHeaders.USER_AGENT);
     }
 
     public String formatParameters(Map<String, String[]> parameterMap) {

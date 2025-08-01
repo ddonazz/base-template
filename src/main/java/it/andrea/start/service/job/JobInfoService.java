@@ -3,11 +3,10 @@ package it.andrea.start.service.job;
 import java.util.Collection;
 
 import it.andrea.start.dto.JobInfoDTO;
-import it.andrea.start.error.exception.mapping.MappingToDtoException; // Assicurati che questa esista o rimuovi 'throws'
 
 public interface JobInfoService {
 
-    Collection<JobInfoDTO> listJobs() throws MappingToDtoException;
+    Collection<JobInfoDTO> listJobs();
 
     void scheduleNewJob(String jobName, String jobGroup);
 

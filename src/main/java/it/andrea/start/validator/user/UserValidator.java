@@ -6,7 +6,6 @@ import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 import it.andrea.start.constants.RoleType;
-import it.andrea.start.controller.types.ChangePassword;
 import it.andrea.start.dto.user.UserDTO;
 import it.andrea.start.error.exception.BusinessException;
 import it.andrea.start.error.exception.ErrorCode;
@@ -24,8 +23,8 @@ public class UserValidator {
         this.userRepository = userRepository;
     }
 
-    public void checkPassword(ChangePassword changePassword) throws BusinessException {
-        if (!Objects.equals(changePassword.getNewPassword(), changePassword.getRepeatPassword())) {
+    public void checkPassword(String newPassword, String repeatPassword) throws BusinessException {
+        if (!Objects.equals(newPassword, repeatPassword)) {
             throw new BusinessException(ErrorCode.USER_REPEAT_PASSWORD_NOT_EQUAL);
         }
     }

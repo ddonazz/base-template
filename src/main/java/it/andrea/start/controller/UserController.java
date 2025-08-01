@@ -20,7 +20,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.andrea.start.annotation.Audit;
 import it.andrea.start.constants.AuditActivity;
 import it.andrea.start.constants.AuditTypeOperation;
-import it.andrea.start.controller.types.ChangePassword;
 import it.andrea.start.dto.user.UserDTO;
 import it.andrea.start.searchcriteria.user.UserSearchCriteria;
 import it.andrea.start.security.service.JWTokenUserDetails;
@@ -132,12 +131,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/change-password/{userId}")
     @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.UPDATE)
-    public ResponseEntity<Void> changePassword(
+    public ResponseEntity<Void> changePassword( //
             @PathVariable Long userId, //
             @RequestBody ChangePassword changePassword, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
 
-        userService.changePassword(userId, changePassword, userDetails);
+        userService.changePassword(userId, changePassword.newPassword(), changePassword.repeatPassword(), userDetails);
 
         return ResponseEntity.ok().build();
     }
@@ -151,13 +150,15 @@ public class UserController {
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/change-my-password")
     @Audit(activity = AuditActivity.USER_OPERATION, type = AuditTypeOperation.UPDATE)
-    public ResponseEntity<Void> changeMyPassword(
+    public ResponseEntity<Void> changeMyPassword( //
             @RequestBody ChangePassword changePassword, //
             @AuthenticationPrincipal JWTokenUserDetails userDetails) {
         
-        userService.changeMyPassword(changePassword, userDetails);
+        userService.changeMyPassword(changePassword.newPassword(), changePassword.repeatPassword(), userDetails);
 
         return ResponseEntity.ok().build();
     }
 
 }
+
+record ChangePassword(String newPassword, String repeatPassword) {}

@@ -31,7 +31,6 @@ import it.andrea.start.dto.JobInfoDTO;
 import it.andrea.start.error.exception.job.JobControlException;
 import it.andrea.start.error.exception.job.JobNotFoundException;
 import it.andrea.start.error.exception.job.JobSchedulingException;
-import it.andrea.start.error.exception.mapping.MappingToDtoException;
 import it.andrea.start.mappers.job.JobInfoMapper;
 import it.andrea.start.models.job.JobInfo;
 import it.andrea.start.repository.JobInfoRepository;
@@ -51,7 +50,7 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<JobInfoDTO> listJobs() throws MappingToDtoException {
+    public Collection<JobInfoDTO> listJobs() {
         List<JobInfo> jobs = jobInfoRepository.findAll();
         return jobInfoMapper.toDtos(jobs);
     }

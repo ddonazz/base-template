@@ -15,6 +15,7 @@ import org.quartz.SimpleTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
@@ -33,7 +34,6 @@ import it.andrea.start.models.user.UserRole;
 import it.andrea.start.repository.JobInfoRepository;
 import it.andrea.start.repository.user.UserRepository;
 import it.andrea.start.repository.user.UserRoleRepository;
-import it.andrea.start.security.EncrypterManager;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
@@ -47,7 +47,7 @@ public class InitializeServiceImpl {
     private static final String JOBS_FILE = "jobs" + XML_FILE;
     private static final String USERS_FILE = "users" + XML_FILE;
 
-    private final EncrypterManager encrypterManager;
+    private final PasswordEncoder passwordEncoder;
     private final DocumentBuilderFactory documentBuilderFactory;
 
     private final JobInfoRepository jobInfoRepository;
@@ -114,7 +114,7 @@ public class InitializeServiceImpl {
     private User createUserFromElement(Element element) {
         User user = new User();
         user.setUsername(getRequiredTagValue("username", element));
-        user.setPassword(encrypterManager.encode(getRequiredTagValue("password", element)));
+        user.setPassword(passwordEncoder.encode(getRequiredTagValue("password", element)));
         user.setEmail(getRequiredTagValue("email", element));
 
         user.setName(getTagValueOrNull("name", element));
