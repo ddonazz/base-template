@@ -43,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 public class InitializeServiceImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(InitializeServiceImpl.class);
+    
     private static final String XML_FILE = ".xml";
     private static final String JOBS_FILE = "jobs" + XML_FILE;
     private static final String USERS_FILE = "users" + XML_FILE;
@@ -89,25 +90,29 @@ public class InitializeServiceImpl {
                 Node node = nodeList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element) node;
-                    try {
-                        User user = createUserFromElement(element);
-                        if (userRepository.findByUsername(user.getUsername()).isEmpty()) {
-                            user.setCreatedBy(InitializeServiceImpl.class.getName());
-                            user.setUpdatedBy(InitializeServiceImpl.class.getName());
-                            userRepository.save(user);
-                            LOG.info("Utente '{}' creato da XML.", user.getUsername());
-                        } else {
-                            LOG.warn("Utente '{}' già presente nel database, saltato da XML.", user.getUsername());
-                        }
-                    } catch (IllegalArgumentException | NullPointerException e) {
-                        LOG.error("Errore durante la creazione di User dall'elemento XML #{}: {}", i + 1, e.getMessage(), e);
-                    }
+                    processAndSaveUserElement(element, i + 1);
                 }
             }
         } catch (ParserConfigurationException | SAXException | IOException e) {
             logXmlError(e, filePath);
         } catch (Exception e) {
             logUnexpectedError(e, "caricamento utenti da XML " + filePath);
+        }
+    }
+    
+    private void processAndSaveUserElement(Element element, int elementIndex) {
+        try {
+            User user = createUserFromElement(element);
+            if (userRepository.findByUsername(user.getUsername()).isEmpty()) {
+                user.setCreatedBy(InitializeServiceImpl.class.getName());
+                user.setUpdatedBy(InitializeServiceImpl.class.getName());
+                userRepository.save(user);
+                LOG.info("Utente '{}' creato da XML.", user.getUsername());
+            } else {
+                LOG.warn("Utente '{}' già presente nel database, saltato da XML.", user.getUsername());
+            }
+        } catch (IllegalArgumentException | NullPointerException e) {
+            LOG.error("Errore durante la creazione di User dall'elemento XML #{}: {}", elementIndex, e.getMessage(), e);
         }
     }
 
@@ -132,8 +137,8 @@ public class InitializeServiceImpl {
                     try {
                         RoleType roleType = RoleType.valueOf(roleName.trim().toUpperCase());
                         Optional<UserRole> userRoleOpt = userRoleRepository.findByRole(roleType);
-                        userRoleOpt.ifPresentOrElse(
-                                userRoles::add,
+                        userRoleOpt.ifPresentOrElse( //
+                                userRoles::add, //
                                 () -> new UserRoleNotFoundException(roleName));
                     } catch (IllegalArgumentException e) {
                         LOG.warn("Valore ruolo non valido '{}' per l'utente '{}'. Ignorato.", roleName.trim(), user.getUsername());
@@ -165,12 +170,8 @@ public class InitializeServiceImpl {
                 Node node = nodeList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element) node;
-                    try {
-                        JobInfo jobInfo = createJobInfoFromElement(element);
-                        jobInfoRepository.save(jobInfo);
+                    if (processAndSaveJobElement(element, i + 1)) {
                         jobsSaved++;
-                    } catch (IllegalArgumentException | NullPointerException e) {
-                        LOG.error("Errore durante la creazione di JobInfo dall'elemento XML #{}: {}", i + 1, e.getMessage(), e);
                     }
                 }
             }
@@ -181,6 +182,17 @@ public class InitializeServiceImpl {
             logXmlError(e, filePath);
         } catch (Exception e) {
             logUnexpectedError(e, "caricamento job da XML " + filePath);
+        }
+    }
+    
+    private boolean processAndSaveJobElement(Element element, int elementIndex) {
+        try {
+            JobInfo jobInfo = createJobInfoFromElement(element);
+            jobInfoRepository.save(jobInfo);
+            return true;
+        } catch (IllegalArgumentException | NullPointerException e) {
+            LOG.error("Errore durante la creazione di JobInfo dall'elemento XML #{}: {}", elementIndex, e.getMessage(), e);
+            return false;
         }
     }
 

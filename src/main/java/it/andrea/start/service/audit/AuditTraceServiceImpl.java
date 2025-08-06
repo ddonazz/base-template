@@ -38,8 +38,8 @@ public class AuditTraceServiceImpl implements AuditTraceService {
     @Override
     @Transactional(readOnly = true)
     public Page<AuditTraceDTO> searchAuditTrace(AuditTraceSearchCriteria criteria, Pageable pageable) {
-        final Page<AuditTrace> auditPage = auditTraceRepository.findAll(new AuditTraceSearchSpecification(criteria), pageable);
-        return auditPage.map(auditMapper::toDto);
+        return auditTraceRepository.findAll(new AuditTraceSearchSpecification(criteria), pageable) //
+                .map(auditMapper::toDto);
     }
 
     @Override

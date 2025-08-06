@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
-import it.andrea.start.controller.response.ApiError;
+import it.andrea.start.error.ApiError;
 import it.andrea.start.error.exception.ApplicationException;
 import it.andrea.start.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +28,8 @@ public class ApplicationExceptionHandler {
     public ResponseEntity<ApiError> handleApplicationException(ApplicationException ex, WebRequest request) {
         ErrorCode errorCode = ex.getErrorCode();
         HttpStatus status = errorCode.getHttpStatus();
+
+        // @formatter:off
         String message = messageSource.getMessage(
                 errorCode.getCode(),
                 ex.getMessageArguments(),
@@ -39,11 +41,12 @@ public class ApplicationExceptionHandler {
                 errorCode,
                 message,
                 ((ServletWebRequest) request).getRequest().getRequestURI());
+        // @formatter:on
 
         if (ex.getErrorCode().getHttpStatus().is5xxServerError()) {
-            LOG.error("ApplicationException Occurred: Code={}, Status={}, Path={}, Message={}", errorCode.getCode(), status, apiError.getPath(), message, ex);
+            LOG.error("ApplicationException Occurred: Code={}, Status={}, Path={}, Message={}", errorCode.getCode(), status, apiError.path(), message, ex);
         } else {
-            LOG.warn("ApplicationException Occurred: Code={}, Status={}, Path={}, Message={}", errorCode.getCode(), status, apiError.getPath(), message);
+            LOG.warn("ApplicationException Occurred: Code={}, Status={}, Path={}, Message={}", errorCode.getCode(), status, apiError.path(), message);
         }
 
         return new ResponseEntity<>(apiError, ex.getErrorCode().getHttpStatus());

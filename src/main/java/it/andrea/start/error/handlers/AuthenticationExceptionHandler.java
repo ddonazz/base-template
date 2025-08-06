@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
-import it.andrea.start.controller.response.ApiError;
+import it.andrea.start.error.ApiError;
 import it.andrea.start.error.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 
@@ -28,6 +28,8 @@ public class AuthenticationExceptionHandler {
     public ResponseEntity<ApiError> handleApplicationException(AuthenticationException ex, WebRequest request) {
         ErrorCode errorCode = ErrorCode.AUTHENTICATION_FAILED;
         HttpStatus status = errorCode.getHttpStatus();
+        
+        // @formatter:off
         String message = messageSource.getMessage(
                 errorCode.getCode(),
                 null,
@@ -39,8 +41,9 @@ public class AuthenticationExceptionHandler {
                 errorCode,
                 message,
                 ((ServletWebRequest) request).getRequest().getRequestURI());
+        // @formatter:on
 
-        LOG.warn("AuthenticationException Occurred: Code={}, Status={}, Path={}, Message={}", errorCode.getCode(), status, apiError.getPath(), message);
+        LOG.warn("AuthenticationException Occurred: Code={}, Status={}, Path={}, Message={}", errorCode.getCode(), status, apiError.path(), message);
 
         return new ResponseEntity<>(apiError, errorCode.getHttpStatus());
     }

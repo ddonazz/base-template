@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
-import it.andrea.start.controller.response.ApiError;
+import it.andrea.start.error.ApiError;
 import it.andrea.start.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +28,7 @@ public class GenericExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorCode errorCode = ErrorCode.ERROR_INTERNAL_SERVER_ERROR;
 
+        // @formatter:off
         String message = messageSource.getMessage(
                 errorCode.getCode(),
                 null,
@@ -39,8 +40,9 @@ public class GenericExceptionHandler {
                 errorCode,
                 message,
                 ((ServletWebRequest) request).getRequest().getRequestURI());
+        // @formatter:on
 
-        LOG.error("Unhandled Exception Occurred: Path={}, Message={}", apiError.getPath(), ex.getMessage(), ex);
+        LOG.error("Unhandled Exception Occurred: Path={}, Message={}", apiError.path(), ex.getMessage(), ex);
 
         return new ResponseEntity<>(apiError, status);
     }
